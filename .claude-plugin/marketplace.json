@@ -1,0 +1,16 @@
+{
+  "name": "morph-market",
+  "owner": {
+    "name": "MORPH"
+  },
+  "metadata": {
+    "description": "MORPH video editing styles for Claude Code"
+  },
+  "plugins": [
+    {
+      "name": "morph",
+      "source": "./morph",
+      "description": "MORPH video editing styles"
+    }
+  ]
+}

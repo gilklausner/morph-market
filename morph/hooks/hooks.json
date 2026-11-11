@@ -1,0 +1,50 @@
+{
+  "description": "Brings a style's components from the MORPH server when Claude gets the style, and removes them when the session closes.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "mcp__plugin_morph_morph__get_style",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/scripts/fetch-style-code.mjs"
+            ],
+            "timeout": 60
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/scripts/clear-style-code.mjs",
+              "end"
+            ],
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/scripts/clear-style-code.mjs",
+              "start"
+            ],
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

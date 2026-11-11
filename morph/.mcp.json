@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "morph": {
+      "type": "http",
+      "url": "https://morph-server.gil-klausner7.workers.dev/mcp",
+      "headers": {
+        "Authorization": "Bearer ${user_config.morph_key}"
+      },
+      "headersHelper": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/device-header.mjs\""
+    }
+  }
+}

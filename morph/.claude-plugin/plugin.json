@@ -1,0 +1,16 @@
+{
+  "name": "morph",
+  "displayName": "MORPH",
+  "version": "0.1.0",
+  "description": "MORPH video editing styles",
+  "author": { "name": "MORPH" },
+  "userConfig": {
+    "morph_key": {
+      "type": "string",
+      "title": "MORPH key",
+      "description": "The key from your MORPH email",
+      "required": true,
+      "sensitive": true
+    }
+  }
+}
