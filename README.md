@@ -4,14 +4,6 @@
 
 ## התקנה
 
-בתוך קלוד קוד מקלידים שתי שורות, אחת אחרי השנייה:
+ההתקנה נעשית בהדבקה אחת בקלוד. כל השלבים בדף ההתקנה:
 
-```
-/plugin marketplace add gilklausner/morph-market
-```
-
-```
-/plugin install morph@morph-market
-```
-
-בסוף ההתקנה קלוד קוד מבקש את המפתח שקיבלת.
+https://morph-ai.pages.dev/install
