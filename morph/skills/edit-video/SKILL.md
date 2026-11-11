@@ -1,6 +1,6 @@
 ---
 name: edit-video
-description: The entry point for editing a video in a MORPH editing style. Use it whenever the user wants a video edited or wants to start a new video, judged by meaning and not by exact words, in any wording, Hebrew or English. Examples, not a full list - "תערוך לי סרטון", "אני רוצה לערוך סרטון", "בוא נערוך סרטון", "תעשה לי עריכה", "יש לי סרטון לעריכה", "יש לי גלם", "סרטון חדש", "תערוך בסגנון", "edit this video". It gets the style's instructions from the MORPH server with the user's key, and stops when the key is not active.
+description: The entry point for editing a video in a MORPH editing style. Use it whenever the user wants a video edited or wants to start a new video, judged by meaning and not by exact words, in any wording, Hebrew or English. Examples, not a full list - "תערוך לי סרטון", "אני רוצה לערוך סרטון", "בוא נערוך סרטון", "תעשה לי עריכה", "יש לי סרטון לעריכה", "יש לי גלם", "סרטון חדש", "תערוך בסגנון", "edit this video". Use it also when the user asks to install or update the MORPH tools, for example "תתקין את MORPH", "תתקין את הכלים", "תעדכן את הכלים". It gets the style's instructions from the MORPH server with the user's key, and stops when the key is not active.
 ---
 
 # עריכת סרטון ב־MORPH
@@ -13,16 +13,19 @@ description: The entry point for editing a video in a MORPH editing style. Use i
 - **הכלים של השרת לא זמינים בשיחה:** עוצרים. בדרך כלל זה אומר שהמפתח עוד לא הוזן, כי בלי מפתח החיבור לשרת לא עולה. אומרים למשתמש להזין את המפתח שקיבל במייל, בפקודה שלמטה, ואז לפתוח שיחה חדשה. אם המפתח כבר הוזן, אומרים לו שאין חיבור לשרת של MORPH ושינסה שוב מאוחר יותר.
   `/plugin configure morph@morph-market`
 
-## 2. בוחרים סגנון
+## 2. בודקים שהכלים מותקנים
+הכלים של MORPH (חיתוך, תמלול, רימושן, סקירה וסאונד) יושבים בתיקייה שבה נפתחה השיחה. אם אין בה התיקיות "כלים" ו"חיתוך", או שהמשתמש ביקש להתקין או לעדכן את הכלים, קוראים ל־get_tools ועובדים בדיוק לפי מה שחזר. אם המשתמש ביקש רק התקנה או עדכון, עוצרים כאן כשהיא מסתיימת.
+
+## 3. בוחרים סגנון
 אם המשתמש כבר אמר באיזה סגנון, משתמשים בו. אחרת שואלים בשאלה עם כפתורים: לכל סגנון השם והשורה שלו מ־list_styles.
 
-## 3. מביאים את ההוראות של הסגנון
+## 4. מביאים את ההוראות של הסגנון
 1. קוראים ל־get_style עם הסגנון שנבחר.
 2. קוראים כל מסמך ברשימה שחזרה, עם get_document, בסדר של הרשימה, מההתחלה עד הסוף, לפני שמתחילים לעבוד.
 
 אם אחת הקריאות מסורבת באמצע, עוצרים כמו בשלב 1.
 
-## 4. עורכים
+## 5. עורכים
 - עובדים לפי סדר העבודה שבמסמכים, מהשלב הראשון, ורק לפי ההוראות של הסגנון שנבחר.
-- הכלים של MORPH (חיתוך, תמלול, רימושן, סקירה וסאונד) נמצאים בתיקייה שבה נפתחה השיחה, והנתיבים שבמסמכים הם מהתיקייה הזו. אם אין בה התיקיות "כלים" ו"חיתוך", עוצרים ואומרים למשתמש שהכלים של MORPH לא מותקנים בתיקייה הזו.
+- הנתיבים שבמסמכים הם מהתיקייה שבה נפתחה השיחה, שבה מותקנים הכלים של MORPH.
 - ההוראות נשארות בשרת. לא שומרים אותן בקבצים במחשב, ולא מעתיקים אותן לתיקיית הסרטון.
