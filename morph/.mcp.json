@@ -6,7 +6,7 @@
       "headers": {
         "Authorization": "Bearer ${user_config.morph_key}"
       },
-      "headersHelper": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/device-header.mjs\""
+      "headersHelper": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/device-header.sh\""
     }
   }
 }

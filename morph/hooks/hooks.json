@@ -1,5 +1,5 @@
 {
-  "description": "Brings a style's components from the MORPH server when Claude gets the style, and removes them when the session closes.",
+  "description": "Brings a style's components from the MORPH server when Claude gets the style, removes them when the session closes, and points each session at the programs the MORPH tools bring.",
   "hooks": {
     "PostToolUse": [
       {
@@ -7,8 +7,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node",
+            "command": "sh",
             "args": [
+              "${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh",
               "${CLAUDE_PLUGIN_ROOT}/scripts/fetch-style-code.mjs"
             ],
             "timeout": 60
@@ -21,8 +22,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node",
+            "command": "sh",
             "args": [
+              "${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh",
               "${CLAUDE_PLUGIN_ROOT}/scripts/clear-style-code.mjs",
               "end"
             ],
@@ -36,8 +38,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node",
+            "command": "sh",
             "args": [
+              "${CLAUDE_PLUGIN_ROOT}/scripts/session-env.sh"
+            ],
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "sh",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh",
               "${CLAUDE_PLUGIN_ROOT}/scripts/clear-style-code.mjs",
               "start"
             ],
