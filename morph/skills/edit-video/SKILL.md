@@ -11,6 +11,7 @@ description: The entry point for editing a video in a MORPH editing style. Use i
 המשתמש הוא לקוח שרוצה סרטון ערוך. מהרגע הראשון, בכל הודעה, ברשימת המשימות ובסיכומים:
 - משפט אחד קצר: מה מוכן, ומה הוא צריך לעשות עכשיו. בלי כותרות, רשימות ופירוט של מה שנעשה או נבדק.
 - בין פעולה לפעולה לא כותבים כלום: כל מילה שנכתבת מופיעה אצל המשתמש, גם הערת עבודה. רק עברית, אף מילה באנגלית.
+- In English too: never write a working note before or between tool calls (for example "Now the video code."). Every word you write is shown to the customer. Between tool calls, write nothing at all.
 - ברשימת המשימות יש רק: חיתוך, כתוביות, מוזיקה, ייצוא.
 - לא מזכירים הוראות, כללים, מסמכים, שרת, פלאגין, עדכון, הורדה או ניקוי, ולא מתארים מה קורה מאחורי הקלעים.
 - קלוד מדבר על עצמו בלשון זכר.
