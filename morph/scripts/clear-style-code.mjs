@@ -1,6 +1,6 @@
-// Removes what the plugin downloaded (the style components, and the MORPH songs and
-// sound effects), so it stays on the computer only while an edit is going on. It runs by
-// itself (see hooks/hooks.json):
+// Removes the style components the plugin downloaded, so they stay on the computer only
+// while an edit is going on, and takes back the review page's settings it lent to the
+// session's folder. It runs by itself (see hooks/hooks.json):
 //
 //   node clear-style-code.mjs end     when a session closes: what that session downloaded
 //   node clear-style-code.mjs start   when a session opens: leftovers of sessions that
@@ -12,6 +12,7 @@
 import { readFileSync } from "node:fs";
 
 import { readDownloads, removeParts, writeDownloads } from "./downloads.mjs";
+import { returnReviewSettings } from "./review-settings.mjs";
 
 /** A download nobody touched for this long is a leftover. */
 const STALE_MS = 12 * 60 * 60 * 1000;
@@ -31,6 +32,8 @@ const staying = downloads.filter((entry) => !leaving.includes(entry));
 
 for (const entry of leaving) {
   // Another session that still works in the same folder keeps what it downloaded.
-  if (!staying.some((other) => other.path === entry.path && !stale(other))) await removeParts(entry);
+  if (staying.some((other) => other.path === entry.path && Boolean(other.review) === Boolean(entry.review) && !stale(other))) continue;
+  if (entry.review) await returnReviewSettings(entry.path);
+  else await removeParts(entry);
 }
 if (leaving.length) await writeDownloads(staying);

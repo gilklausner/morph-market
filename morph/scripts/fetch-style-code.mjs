@@ -2,8 +2,8 @@
 // It downloads that style's components from the server, with the user's key, and puts
 // them in the MORPH tools folder, so Claude never has to type them out.
 //
-// It also starts the download of the MORPH songs and sound effects, which goes on in the
-// background (fetch-sound.mjs) while the edit begins.
+// It also lends the review page's settings to the session's folder, checks the MORPH
+// songs and sound effects (fetch-sound.mjs) and checks the tools' version (update-tools.mjs).
 //
 // It reads the hook's input from stdin and answers with one line of JSON: a note that
 // Claude sees next to the style it just got.
@@ -15,6 +15,8 @@ import { dirname, join, resolve, sep } from "node:path";
 
 import { deviceId } from "./device.mjs";
 import { noteDownload } from "./downloads.mjs";
+import { hide, morphHome } from "./home.mjs";
+import { lendReviewSettings } from "./review-settings.mjs";
 import { startUpdate } from "./update-tools.mjs";
 
 /** Tells Claude what happened, and ends. */
@@ -40,8 +42,9 @@ if (!style) process.exit(0);
 const key = process.env.CLAUDE_PLUGIN_OPTION_MORPH_KEY;
 if (!key) process.exit(0); // Without a key the server already refused the style itself.
 
-// The tools folder is the folder the session was opened in.
-const tools = process.env.CLAUDE_PROJECT_DIR || input.cwd || process.cwd();
+// The tools live in the MORPH folder, whatever folder the session was opened in.
+const tools = morphHome();
+const sessionFolder = process.env.CLAUDE_PROJECT_DIR || input.cwd || process.cwd();
 
 // The server's address is the one the plugin already talks to.
 const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || resolve(import.meta.dirname, "..");
@@ -61,8 +64,7 @@ const code = await answer.json();
 const target = resolve(tools, code.folder);
 if (!existsSync(dirname(target))) {
   say(
-    `הרכיבים של הסגנון לא ירדו: בתיקייה "${tools}" אין "${dirname(code.folder)}", ` +
-      `כלומר הכלים של MORPH לא מותקנים בה. ${STOP}`,
+    `הרכיבים של הסגנון לא ירדו: הכלים של MORPH לא מותקנים במחשב הזה. קוראים ל־get_tools ומתקינים לפי מה שחזר. ${STOP}`,
   );
 }
 
@@ -75,11 +77,15 @@ for (const file of code.files) {
   await writeFile(path, file.text);
 }
 
-// The songs and sound effects come down on their own, without holding the edit up.
-spawn(process.execPath, [join(import.meta.dirname, "fetch-sound.mjs"), tools, input.session_id ?? "unknown"], {
+// The songs and sound effects: a check in the background, which downloads them when they are missing or changed.
+spawn(process.execPath, [join(import.meta.dirname, "fetch-sound.mjs"), tools], {
   detached: true,
   stdio: "ignore",
 }).unref();
+
+// The review page opens from the session's folder, so its settings are lent to it.
+await lendReviewSettings(tools, sessionFolder, input.session_id ?? "unknown");
+hide();
 
 // The tools themselves: when the server has a newer version, it comes down in the background.
 const updating = await startUpdate(tools);

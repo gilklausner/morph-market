@@ -2,7 +2,8 @@
 // server which version is current, and when the folder holds another one it downloads
 // the tools and runs their installer, in the background.
 //
-//   node update-tools.mjs start             when a session opens (see hooks/hooks.json)
+//   node update-tools.mjs start             when a session opens (see hooks/hooks.json); it
+//                                           also starts the check of the sound
 //   node update-tools.mjs run <tools> ...   the update itself, started by startUpdate
 //
 // fetch-style-code.mjs calls startUpdate too, at the start of every edit.
@@ -18,6 +19,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { deviceId } from "./device.mjs";
+import { hide, morphHome } from "./home.mjs";
 import { download, serverAddress } from "./server.mjs";
 
 const MARKER = "כלים/.morph-update.json";
@@ -103,11 +105,15 @@ async function run(tools, previous, claude) {
   } finally {
     await rm(archive, { force: true });
     await rm(join(tools, MARKER), { force: true });
+    hide();
   }
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const [mode, tools, previous, claude] = process.argv.slice(2);
   if (mode === "run" && tools) await run(tools, previous, claude);
-  else if (mode === "start") await startUpdate(process.env.CLAUDE_PROJECT_DIR || process.cwd());
+  else if (mode === "start") {
+    await startUpdate(morphHome());
+    spawn(process.execPath, [join(import.meta.dirname, "fetch-sound.mjs"), morphHome()], { detached: true, stdio: "ignore" }).unref();
+  }
 }
