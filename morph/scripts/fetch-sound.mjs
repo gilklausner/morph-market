@@ -15,9 +15,10 @@
 import { spawnSync } from "node:child_process";
 import { createWriteStream, existsSync } from "node:fs";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import http from "node:http";
+import https from "node:https";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve, sep } from "node:path";
-import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 
 import { deviceId } from "./device.mjs";
@@ -44,6 +45,24 @@ const write = (state) => writeFile(marker, JSON.stringify({ ...state, at: new Da
 const inside = (files) =>
   Array.isArray(files) && files.length && files.every((file) => resolve(tools, file).startsWith(resolve(tools) + sep)) ? files : null;
 
+/**
+ * Downloads a file. Node's plain client, and not fetch: on a file this size fetch is
+ * many times slower.
+ */
+function download(address, headers, target) {
+  return new Promise((done, failed) => {
+    (address.protocol === "http:" ? http : https)
+      .get(address, { headers }, (answer) => {
+        if (answer.statusCode !== 200) {
+          answer.resume();
+          return failed(new Error(`השרת של MORPH ענה ${answer.statusCode}`));
+        }
+        pipeline(answer, createWriteStream(target)).then(done, failed);
+      })
+      .on("error", () => failed(new Error("אין חיבור לשרת של MORPH")));
+  });
+}
+
 const now = await read();
 if (now?.state === "ready" && inside(now.files)?.every((file) => existsSync(join(tools, file)))) {
   // Already here, from an earlier edit of this session or from another open session.
@@ -57,12 +76,8 @@ const archive = join(tmpdir(), `morph-sound-${process.pid}.tar`);
 try {
   const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || resolve(import.meta.dirname, "..");
   const mcp = JSON.parse(await readFile(join(pluginRoot, ".mcp.json"), "utf8"));
-  const answer = await fetch(new URL("/sound", mcp.mcpServers.morph.url), {
-    headers: { Authorization: `Bearer ${key}`, "X-Morph-Device": deviceId() },
-  });
-  if (!answer.ok) throw new Error(`השרת של MORPH ענה ${answer.status}`);
   await mkdir(dirname(archive), { recursive: true });
-  await pipeline(Readable.fromWeb(answer.body), createWriteStream(archive));
+  await download(new URL("/sound", mcp.mcpServers.morph.url), { Authorization: `Bearer ${key}`, "X-Morph-Device": deviceId() }, archive);
 
   // The archive is laid out like the tools folder, and its last file is the list of
   // what it holds, which replaces the "loading" note only when everything is in place.
