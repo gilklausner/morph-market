@@ -1,5 +1,5 @@
 {
-  "description": "Brings a style's components, and the MORPH songs and sound effects, from the MORPH server when Claude gets the style, removes them when the session closes, and points each session at the programs the MORPH tools bring.",
+  "description": "Brings a style's components, and the MORPH songs and sound effects, from the MORPH server when Claude gets the style, removes them when the session closes, keeps the MORPH tools up to date in the background, and points each session at the programs the MORPH tools bring.",
   "hooks": {
     "PostToolUse": [
       {
@@ -50,6 +50,16 @@
             "args": [
               "${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh",
               "${CLAUDE_PLUGIN_ROOT}/scripts/clear-style-code.mjs",
+              "start"
+            ],
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "sh",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh",
+              "${CLAUDE_PLUGIN_ROOT}/scripts/update-tools.mjs",
               "start"
             ],
             "timeout": 10

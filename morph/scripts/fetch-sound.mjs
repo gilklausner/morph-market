@@ -13,16 +13,14 @@
 //   { "state": "failed", "error": "" }
 
 import { spawnSync } from "node:child_process";
-import { createWriteStream, existsSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import http from "node:http";
-import https from "node:https";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve, sep } from "node:path";
-import { pipeline } from "node:stream/promises";
 
 import { deviceId } from "./device.mjs";
 import { noteDownload } from "./downloads.mjs";
+import { download, serverAddress } from "./server.mjs";
 
 const MARKER = "סאונד/.morph-sound.json";
 /** A download that says it is running for longer than this has died. */
@@ -45,24 +43,6 @@ const write = (state) => writeFile(marker, JSON.stringify({ ...state, at: new Da
 const inside = (files) =>
   Array.isArray(files) && files.length && files.every((file) => resolve(tools, file).startsWith(resolve(tools) + sep)) ? files : null;
 
-/**
- * Downloads a file. Node's plain client, and not fetch: on a file this size fetch is
- * many times slower.
- */
-function download(address, headers, target) {
-  return new Promise((done, failed) => {
-    (address.protocol === "http:" ? http : https)
-      .get(address, { headers }, (answer) => {
-        if (answer.statusCode !== 200) {
-          answer.resume();
-          return failed(new Error(`השרת של MORPH ענה ${answer.statusCode}`));
-        }
-        pipeline(answer, createWriteStream(target)).then(done, failed);
-      })
-      .on("error", () => failed(new Error("אין חיבור לשרת של MORPH")));
-  });
-}
-
 const now = await read();
 if (now?.state === "ready" && inside(now.files)?.every((file) => existsSync(join(tools, file)))) {
   // Already here, from an earlier edit of this session or from another open session.
@@ -74,10 +54,8 @@ if (now?.state === "loading" && Date.now() - Date.parse(now.at) < LOADING_MS) pr
 await write({ state: "loading" });
 const archive = join(tmpdir(), `morph-sound-${process.pid}.tar`);
 try {
-  const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || resolve(import.meta.dirname, "..");
-  const mcp = JSON.parse(await readFile(join(pluginRoot, ".mcp.json"), "utf8"));
   await mkdir(dirname(archive), { recursive: true });
-  await download(new URL("/sound", mcp.mcpServers.morph.url), { Authorization: `Bearer ${key}`, "X-Morph-Device": deviceId() }, archive);
+  await download(await serverAddress("/sound"), { Authorization: `Bearer ${key}`, "X-Morph-Device": deviceId() }, archive);
 
   // The archive is laid out like the tools folder, and its last file is the list of
   // what it holds, which replaces the "loading" note only when everything is in place.
