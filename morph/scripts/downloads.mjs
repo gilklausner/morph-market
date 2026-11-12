@@ -1,5 +1,5 @@
-// The plugin's own list of what it downloaded: which style folders, for which session,
-// and when. The list lives in the plugin's data folder, outside the tools folder, so the
+// The plugin's own list of what it downloaded: which folders (a style's components, or
+// the songs and sound effects in the tools folder), for which session, and when. The list lives in the plugin's data folder, outside the tools folder, so the
 // plugin can remove what it brought without anyone asking it to.
 
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
@@ -23,14 +23,14 @@ export async function writeDownloads(downloads) {
   await writeFile(file, JSON.stringify(downloads, null, 2));
 }
 
-/** Notes that a session now uses the parts of a style folder. */
+/** Notes that a session now uses the parts of a folder. */
 export async function noteDownload(path, parts, session) {
   const downloads = (await readDownloads()).filter((entry) => !(entry.path === path && entry.session === session));
   downloads.push({ path, parts, session, at: new Date().toISOString() });
   await writeDownloads(downloads);
 }
 
-/** Removes the downloaded parts of a style folder from the computer. */
+/** Removes the downloaded parts of a folder from the computer. */
 export async function removeParts(entry) {
   for (const part of entry.parts) await rm(join(entry.path, part), { recursive: true, force: true });
 }

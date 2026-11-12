@@ -1,5 +1,5 @@
 {
-  "description": "Brings a style's components from the MORPH server when Claude gets the style, removes them when the session closes, and points each session at the programs the MORPH tools bring.",
+  "description": "Brings a style's components, and the MORPH songs and sound effects, from the MORPH server when Claude gets the style, removes them when the session closes, and points each session at the programs the MORPH tools bring.",
   "hooks": {
     "PostToolUse": [
       {

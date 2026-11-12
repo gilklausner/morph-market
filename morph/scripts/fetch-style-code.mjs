@@ -2,9 +2,13 @@
 // It downloads that style's components from the server, with the user's key, and puts
 // them in the MORPH tools folder, so Claude never has to type them out.
 //
+// It also starts the download of the MORPH songs and sound effects, which goes on in the
+// background (fetch-sound.mjs) while the edit begins.
+//
 // It reads the hook's input from stdin and answers with one line of JSON: a note that
 // Claude sees next to the style it just got.
 
+import { spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve, sep } from "node:path";
@@ -69,6 +73,12 @@ for (const file of code.files) {
   await mkdir(dirname(path), { recursive: true });
   await writeFile(path, file.text);
 }
+
+// The songs and sound effects come down on their own, without holding the edit up.
+spawn(process.execPath, [join(import.meta.dirname, "fetch-sound.mjs"), tools, input.session_id ?? "unknown"], {
+  detached: true,
+  stdio: "ignore",
+}).unref();
 
 // The plugin removes them again when this session closes (clear-style-code.mjs).
 await noteDownload(target, code.parts, input.session_id ?? "unknown");

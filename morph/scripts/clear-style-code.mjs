@@ -1,12 +1,13 @@
-// Removes the style components the plugin downloaded, so they stay on the computer only
-// while an edit is going on. It runs by itself (see hooks/hooks.json):
+// Removes what the plugin downloaded (the style components, and the MORPH songs and
+// sound effects), so it stays on the computer only while an edit is going on. It runs by
+// itself (see hooks/hooks.json):
 //
 //   node clear-style-code.mjs end     when a session closes: what that session downloaded
 //   node clear-style-code.mjs start   when a session opens: leftovers of sessions that
 //                                     closed without a chance to clean up
 //
-// A style folder that another session still uses is left alone. The next get_style
-// downloads the components again, so an edit that continues later loses nothing.
+// What another session still uses is left alone. The next get_style downloads everything
+// again, so an edit that continues later loses nothing.
 
 import { readFileSync } from "node:fs";
 
@@ -29,7 +30,7 @@ const leaving = downloads.filter((entry) => (mode === "end" ? entry.session === 
 const staying = downloads.filter((entry) => !leaving.includes(entry));
 
 for (const entry of leaving) {
-  // Another session that still works in the same style folder keeps its components.
+  // Another session that still works in the same folder keeps what it downloaded.
   if (!staying.some((other) => other.path === entry.path && !stale(other))) await removeParts(entry);
 }
 if (leaving.length) await writeDownloads(staying);
