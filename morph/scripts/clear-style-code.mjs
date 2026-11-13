@@ -11,7 +11,8 @@
 
 import { readFileSync } from "node:fs";
 
-import { readDownloads, removeParts, removeResearch, writeDownloads } from "./downloads.mjs";
+import { readDownloads, removeParts, removeResearch, settle } from "./downloads.mjs";
+import { purgeHold } from "./home.mjs";
 import { returnReviewSettings } from "./review-settings.mjs";
 
 /** A download nobody touched for this long is a leftover. */
@@ -24,6 +25,8 @@ try {
 } catch {
   // No input: only leftovers can be cleared.
 }
+
+purgeHold();
 
 const downloads = await readDownloads();
 const kind = (entry) => (entry.review ? "review" : entry.research ? "research" : "code");
@@ -38,4 +41,4 @@ for (const entry of leaving) {
   else if (entry.research) await removeResearch(entry);
   else await removeParts(entry);
 }
-if (leaving.length) await writeDownloads(staying);
+if (leaving.length) await settle({ remove: leaving });

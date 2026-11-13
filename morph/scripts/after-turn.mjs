@@ -12,8 +12,8 @@ import { readFileSync } from "node:fs";
 import { readdir, stat } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 
-import { held, readDownloads, removeParts, removeResearch, writeDownloads } from "./downloads.mjs";
-import { morphHome } from "./home.mjs";
+import { held, readDownloads, removeParts, removeResearch, settle } from "./downloads.mjs";
+import { morphHome, purgeHold } from "./home.mjs";
 
 let session;
 try {
@@ -22,6 +22,8 @@ try {
   process.exit(0);
 }
 if (!session) process.exit(0);
+
+purgeHold();
 
 const downloads = await readDownloads();
 const mine = downloads.filter((entry) => entry.session === session && !entry.review);
@@ -60,17 +62,14 @@ async function working(entry) {
   return false;
 }
 
-let changed = false;
+const seen = [];
 const leaving = [];
 for (const style of new Set(mine.map(styleOf))) {
   const entries = mine.filter((entry) => styleOf(entry) === style);
   let busy = false;
   for (const entry of entries) busy ||= await working(entry);
   if (busy) {
-    for (const entry of entries.filter((found) => !found.seen)) {
-      entry.seen = true;
-      changed = true;
-    }
+    seen.push(...entries.filter((found) => !found.seen));
   } else if (entries.every((entry) => entry.seen)) {
     leaving.push(...entries);
   }
@@ -83,4 +82,4 @@ for (const entry of leaving) {
   if (entry.research) await removeResearch(entry);
   else await removeParts(entry);
 }
-if (changed || leaving.length) await writeDownloads(staying);
+if (seen.length || leaving.length) await settle({ remove: leaving, seen });

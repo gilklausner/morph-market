@@ -74,3 +74,18 @@ export function held(others, entry) {
       Date.now() - new Date(other.at).getTime() < HOLD_MS,
   );
 }
+
+const keyOf = (entry) => [entry.path, entry.session, entry.review ? "review" : entry.research ? "research" : "code", entry.style ?? ""].join("|");
+
+/**
+ * Takes entries off the list, and marks others as seen, on the list as it is on disk right
+ * now. A hook that read the list a moment ago, and writes its own copy back, would drop
+ * what another hook added in between. So a change is always applied to a fresh read.
+ */
+export async function settle({ remove = [], seen = [] } = {}) {
+  const gone = new Set(remove.map(keyOf));
+  const marked = new Set(seen.map(keyOf));
+  const now = (await readDownloads()).filter((entry) => !gone.has(keyOf(entry)));
+  for (const entry of now) if (marked.has(keyOf(entry))) entry.seen = true;
+  await writeDownloads(now);
+}

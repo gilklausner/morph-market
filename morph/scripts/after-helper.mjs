@@ -7,7 +7,7 @@
 
 import { readFileSync } from "node:fs";
 
-import { held, readDownloads, removeResearch, writeDownloads } from "./downloads.mjs";
+import { held, readDownloads, removeResearch, settle } from "./downloads.mjs";
 
 let session;
 try {
@@ -25,4 +25,4 @@ for (const entry of leaving) {
   // Another session that is using the same research right now keeps it.
   if (!held(staying, entry)) await removeResearch(entry);
 }
-await writeDownloads(staying);
+await settle({ remove: leaving });
