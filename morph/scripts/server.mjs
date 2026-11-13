@@ -17,9 +17,10 @@ export async function serverAddress(path) {
 
 /**
  * Downloads a file. Node's plain client, and not fetch: on a big file fetch is many
- * times slower.
+ * times slower. With `append` it goes on at the end of a file that is already there,
+ * which is how a download that comes in parts is joined back.
  */
-export function download(address, headers, target) {
+export function download(address, headers, target, { append = false } = {}) {
   return new Promise((done, failed) => {
     (address.protocol === "http:" ? http : https)
       .get(address, { headers }, (answer) => {
@@ -27,7 +28,7 @@ export function download(address, headers, target) {
           answer.resume();
           return failed(new Error(`השרת של MORPH ענה ${answer.statusCode}`));
         }
-        pipeline(answer, createWriteStream(target)).then(done, failed);
+        pipeline(answer, createWriteStream(target, { flags: append ? "a" : "w" })).then(done, failed);
       })
       .on("error", () => failed(new Error("אין חיבור לשרת של MORPH")));
   });

@@ -3,7 +3,11 @@
 // Claude gets a style that has research, and the plugin removes the research again when
 // the session closes (clear-style-code.mjs).
 //
-//   node fetch-research.mjs <MORPH folder> <style id> <research folder> <version> <list name>
+//   node fetch-research.mjs <MORPH folder> <style id> <research folder> <version> <list name> <parts> <owner>
+//
+// A big research sits on the server in parts, which are joined back here. fetch-style-code.mjs
+// writes the "loading" note itself before it starts this, so Claude never finds the folder
+// without a note; <owner> is the mark it left there, which says the note is this run's own.
 //
 // The list of what the user's last videos took from the research belongs to the user: it
 // stays in the folder when the research leaves, and a download never replaces it.
@@ -27,7 +31,8 @@ const MARKER = ".morph-research.json";
 /** A download that says it is running for longer than this has died. */
 const LOADING_MS = 10 * 60 * 1000;
 
-const [tools, style, folder, version, recent] = process.argv.slice(2);
+const [tools, style, folder, version, recent, partCount, owner] = process.argv.slice(2);
+const parts = /^\d{1,2}$/.test(partCount ?? "") ? Math.max(1, Number(partCount)) : 1;
 const key = process.env.CLAUDE_PLUGIN_OPTION_MORPH_KEY;
 if (!key || !tools || !style || !folder || !/^[0-9a-f]{12}$/.test(version ?? "")) process.exit(0);
 
@@ -48,7 +53,7 @@ const inside = (files) =>
 
 const now = await read();
 if (now?.state === "ready" && now.version === version && inside(now.files)?.every((file) => existsSync(join(target, file)))) process.exit(0);
-if (now?.state === "loading" && Date.now() - Date.parse(now.at) < LOADING_MS) process.exit(0);
+if (now?.state === "loading" && !(owner && now.owner === owner) && Date.now() - Date.parse(now.at) < LOADING_MS) process.exit(0);
 
 await mkdir(target, { recursive: true });
 await write({ state: "loading" });
@@ -58,7 +63,10 @@ try {
   const list = recent && join(target, recent);
   const own = list && existsSync(list) ? await readFile(list) : null;
 
-  await download(await serverAddress(`/research/${encodeURIComponent(style)}`), { Authorization: `Bearer ${key}`, "X-Morph-Device": deviceId() }, archive);
+  const headers = { Authorization: `Bearer ${key}`, "X-Morph-Device": deviceId() };
+  for (let part = 0; part < parts; part += 1) {
+    await download(await serverAddress(`/research/${encodeURIComponent(style)}${part ? `/${part}` : ""}`), headers, archive, { append: part > 0 });
+  }
   // The archive is laid out like the MORPH folder, and its last file is the list of what
   // it holds, which replaces the "loading" note only when everything is in place.
   const unpacked = spawnSync("tar", ["-xf", archive, "-C", tools]);

@@ -13,6 +13,7 @@ import { readdir, stat } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 
 import { held, readDownloads, removeParts, removeResearch, writeDownloads } from "./downloads.mjs";
+import { morphHome } from "./home.mjs";
 
 let session;
 try {
@@ -35,7 +36,7 @@ const holds = async (folder) => {
   }
 };
 /** The style an entry belongs to: the name of the style's folder. */
-const styleOf = (entry) => basename(entry.research ? dirname(entry.path) : entry.path);
+const styleOf = (entry) => entry.style ?? basename(entry.research ? dirname(entry.path) : entry.path);
 /** A video that was exported this long ago is finished, also when its work files were left behind. */
 const FINISHED_MS = 10 * 60 * 1000;
 
@@ -51,8 +52,8 @@ async function inWork(video) {
 /** True while a video of the entry's style is in work. */
 async function working(entry) {
   // The videos in work sit in the style's own folder, MORPH/סגנונות עריכה/<style>, and its code in MORPH/כלים/רימושן/src/<style>.
-  const style = entry.research ? dirname(entry.path) : join(entry.path, "..", "..", "..", "..", "סגנונות עריכה", basename(entry.path));
-  const skip = entry.research ? basename(entry.path) : "מחקר";
+  const style = join(morphHome(), "סגנונות עריכה", styleOf(entry));
+  const skip = "מחקר";
   for (const name of (await holds(style)).filter((found) => found !== skip)) {
     if (await inWork(join(style, name))) return true;
   }

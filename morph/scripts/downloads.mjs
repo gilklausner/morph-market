@@ -24,10 +24,14 @@ export async function writeDownloads(downloads) {
   await writeFile(file, JSON.stringify(downloads, null, 2));
 }
 
-/** Notes that a session now uses the parts of a folder. */
-export async function noteDownload(path, parts, session) {
-  const downloads = (await readDownloads()).filter((entry) => entry.review || !(entry.path === path && entry.session === session));
-  downloads.push({ path, parts, session, at: new Date().toISOString() });
+/**
+ * Notes that a session now uses the parts of a folder. `style` names the style they belong
+ * to. A folder that several styles share, like the tools' scripts, is noted once per style.
+ */
+export async function noteDownload(path, parts, session, style) {
+  const same = (entry) => !entry.review && !entry.research && entry.path === path && entry.session === session && (entry.style ?? "") === (style ?? "");
+  const downloads = (await readDownloads()).filter((entry) => !same(entry));
+  downloads.push({ path, parts, session, ...(style && { style }), at: new Date().toISOString() });
   await writeDownloads(downloads);
 }
 
@@ -37,9 +41,9 @@ export async function removeParts(entry) {
 }
 
 /** Notes that a session now uses a style's research folder. `keep` names what stays in it. */
-export async function noteResearch(path, keep, session) {
+export async function noteResearch(path, keep, session, style) {
   const downloads = (await readDownloads()).filter((entry) => !(entry.research && entry.path === path && entry.session === session));
-  downloads.push({ path, parts: [], research: true, keep, session, at: new Date().toISOString() });
+  downloads.push({ path, parts: [], research: true, keep, session, ...(style && { style }), at: new Date().toISOString() });
   await writeDownloads(downloads);
 }
 
@@ -66,6 +70,7 @@ export function held(others, entry) {
       other.path === entry.path &&
       !other.review &&
       Boolean(other.research) === Boolean(entry.research) &&
+      (other.style ?? "") === (entry.style ?? "") &&
       Date.now() - new Date(other.at).getTime() < HOLD_MS,
   );
 }

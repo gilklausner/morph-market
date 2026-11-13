@@ -33,7 +33,7 @@ const staying = downloads.filter((entry) => !leaving.includes(entry));
 
 for (const entry of leaving) {
   // Another session that still works in the same folder keeps what it downloaded.
-  if (staying.some((other) => other.path === entry.path && kind(other) === kind(entry) && !stale(other))) continue;
+  if (staying.some((other) => other.path === entry.path && kind(other) === kind(entry) && (other.style ?? "") === (entry.style ?? "") && !stale(other))) continue;
   if (entry.review) await returnReviewSettings(entry.path);
   else if (entry.research) await removeResearch(entry);
   else await removeParts(entry);

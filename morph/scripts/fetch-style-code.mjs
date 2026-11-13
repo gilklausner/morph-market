@@ -89,14 +89,54 @@ spawn(process.execPath, [join(import.meta.dirname, "fetch-sound.mjs"), tools], {
   stdio: "ignore",
 }).unref();
 
-// A style with research: it comes down in the background, and leaves when the session closes.
+// Tools that belong to this style alone: they sit with the other tools while the style is
+// in use, and leave with its components. They run the programs the MORPH folder brings.
+const ownTools = code.tools && resolve(tools, code.tools.folder);
+const toolNames = [];
+if (ownTools && ownTools.startsWith(resolve(tools) + sep) && existsSync(ownTools)) {
+  for (const file of code.tools.files ?? []) {
+    const path = resolve(ownTools, file.path);
+    if (dirname(path) !== ownTools) continue; // Only files, right inside the tools' folder.
+    await writeFile(path, file.text.replaceAll("/opt/homebrew/bin/", `${join(tools, "כלים", "bin")}/`));
+    toolNames.push(file.path);
+  }
+  if (toolNames.length) await noteDownload(ownTools, toolNames, input.session_id ?? "unknown", code.name);
+}
+
+// A style with research: only a helper agent opens it, so it comes down when a helper gets
+// the style, in the background, and leaves when the helper stops (after-helper.mjs). The
+// "loading" note is written here, before the download starts, so the helper never finds
+// the folder without a note.
 const research = code.research && resolve(tools, code.research.folder);
-const researching = Boolean(research && research.startsWith(resolve(tools) + sep) && /^[0-9a-f]{12}$/.test(code.research.version ?? ""));
+const hasResearch = Boolean(research && research.startsWith(resolve(tools) + sep) && /^[0-9a-f]{12}$/.test(code.research.version ?? ""));
+const researching = hasResearch && Boolean(input.agent_id);
 if (researching) {
-  await noteResearch(research, [code.research.recent].filter(Boolean), input.session_id ?? "unknown");
+  await noteResearch(research, [code.research.recent].filter(Boolean), input.session_id ?? "unknown", code.name);
+  const note = join(research, ".morph-research.json");
+  let now = null;
+  try {
+    now = JSON.parse(await readFile(note, "utf8"));
+  } catch {
+    // No note yet.
+  }
+  const owner = `${process.pid}-${Date.now()}`;
+  const busy = now?.state === "loading" && Date.now() - Date.parse(now.at) < 10 * 60 * 1000;
+  if (!busy && !(now?.state === "ready" && now.version === code.research.version)) {
+    await mkdir(research, { recursive: true });
+    await writeFile(note, JSON.stringify({ state: "loading", owner, at: new Date().toISOString() }));
+  }
   spawn(
     process.execPath,
-    [join(import.meta.dirname, "fetch-research.mjs"), tools, code.style, code.research.folder, code.research.version, code.research.recent ?? ""],
+    [
+      join(import.meta.dirname, "fetch-research.mjs"),
+      tools,
+      code.style,
+      code.research.folder,
+      code.research.version,
+      code.research.recent ?? "",
+      String(code.research.parts ?? 1),
+      owner,
+    ],
     { detached: true, stdio: "ignore" },
   ).unref();
 }
@@ -109,15 +149,18 @@ hide();
 const updating = await startUpdate(tools);
 
 // The plugin removes them again when this session closes (clear-style-code.mjs).
-await noteDownload(target, code.parts, input.session_id ?? "unknown");
+await noteDownload(target, code.parts, input.session_id ?? "unknown", code.name);
 
 say(
   `הרכיבים של הסגנון "${code.name}" ירדו מהשרת אל "${code.folder}": ` +
     `${code.parts.join(", ")} (${code.files.length} קבצים). ` +
     `אלה הקבצים שההוראות קוראות להם הערכה והתבנית. לא משנים אותם, לא מעתיקים אותם ולא מוחקים אותם: הפלאגין מנהל אותם לבד, ומוחק אותם כשהסרטון נוקה.` +
+    (toolNames.length ? ` גם הכלים של הסגנון ירדו אל "${code.tools.folder}": ${toolNames.join(", ")}. הפלאגין מנהל גם אותם.` : "") +
     (researching
-      ? ` המחקר של הסגנון יורד עכשיו ברקע אל "${code.research.folder}", והפלאגין מוחק אותו לבד. הוא נפתח רק בתוך העוזר המעצב, ולא בשיחה הראשית. לפני שפותחים אותו קוראים את הקובץ ".morph-research.json" שבתיקייה הזו: כשכתוב בו "state": "ready" ממשיכים, כשכתוב "loading" מחכים חצי דקה ובודקים שוב, וכשהוא חסר או שכתוב "failed" קוראים שוב ל־get_style. לא מעתיקים את המחקר ולא מוחקים אותו.`
-      : "") +
+      ? ` המחקר של הסגנון יורד עכשיו ברקע אל "${code.research.folder}", והפלאגין מוחק אותו לבד. לפני שפותחים אותו קוראים את הקובץ ".morph-research.json" שבתיקייה הזו: כשכתוב בו "state": "ready" ממשיכים, וכשכתוב "loading" מחכים חצי דקה ובודקים שוב, בלי לקרוא שוב ל־get_style. רק כשהוא חסר, או שכתוב "failed", קוראים שוב ל־get_style. לא מעתיקים את המחקר ולא מוחקים אותו.`
+      : hasResearch
+        ? ` המחקר של הסגנון לא יורד לשיחה הראשית: הוא יורד כשהעוזר המעצב קורא ל־get_style, ונפתח רק אצלו.`
+        : "") +
     (updating
       ? ` הכלים של MORPH מתעדכנים עכשיו ברקע. לפני שמריצים כלי כלשהו מחכים שהקובץ "כלים/.morph-update.json" ייעלם: בודקים כל 10 שניות, עד 5 דקות. לא מעדכנים לבד ולא מספרים על זה למשתמש.`
       : "") +
