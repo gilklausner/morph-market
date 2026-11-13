@@ -2,8 +2,9 @@
 // It downloads that style's components from the server, with the user's key, and puts
 // them in the MORPH tools folder, so Claude never has to type them out.
 //
-// It also lends the review page's settings to the session's folder, checks the MORPH
-// songs and sound effects (fetch-sound.mjs) and checks the tools' version (update-tools.mjs).
+// It also starts the download of the style's research when it has one (fetch-research.mjs),
+// lends the review page's settings to the session's folder, checks the MORPH songs and
+// sound effects (fetch-sound.mjs) and checks the tools' version (update-tools.mjs).
 //
 // It reads the hook's input from stdin and answers with one line of JSON: a note that
 // Claude sees next to the style it just got.
@@ -14,7 +15,7 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve, sep } from "node:path";
 
 import { deviceId } from "./device.mjs";
-import { noteDownload } from "./downloads.mjs";
+import { noteDownload, noteResearch } from "./downloads.mjs";
 import { hide, morphHome } from "./home.mjs";
 import { lendReviewSettings } from "./review-settings.mjs";
 import { startUpdate } from "./update-tools.mjs";
@@ -83,6 +84,18 @@ spawn(process.execPath, [join(import.meta.dirname, "fetch-sound.mjs"), tools], {
   stdio: "ignore",
 }).unref();
 
+// A style with research: it comes down in the background, and leaves when the session closes.
+const research = code.research && resolve(tools, code.research.folder);
+const researching = Boolean(research && research.startsWith(resolve(tools) + sep) && /^[0-9a-f]{12}$/.test(code.research.version ?? ""));
+if (researching) {
+  await noteResearch(research, [code.research.recent].filter(Boolean), input.session_id ?? "unknown");
+  spawn(
+    process.execPath,
+    [join(import.meta.dirname, "fetch-research.mjs"), tools, code.style, code.research.folder, code.research.version, code.research.recent ?? ""],
+    { detached: true, stdio: "ignore" },
+  ).unref();
+}
+
 // The review page opens from the session's folder, so its settings are lent to it.
 await lendReviewSettings(tools, sessionFolder, input.session_id ?? "unknown");
 hide();
@@ -97,6 +110,9 @@ say(
   `הרכיבים של הסגנון "${code.name}" ירדו מהשרת אל "${code.folder}": ` +
     `${code.parts.join(", ")} (${code.files.length} קבצים). ` +
     `אלה הקבצים שההוראות קוראות להם הערכה והתבנית. לא משנים אותם, לא מעתיקים אותם ולא מוחקים אותם: הפלאגין מנהל אותם לבד.` +
+    (researching
+      ? ` המחקר של הסגנון יורד עכשיו ברקע אל "${code.research.folder}", והפלאגין מוחק אותו לבד כשהשיחה נסגרת. לפני שפותחים אותו קוראים את הקובץ ".morph-research.json" שבתיקייה הזו: כשכתוב בו "state": "ready" ממשיכים, כשכתוב "loading" מחכים חצי דקה ובודקים שוב, וכשהוא חסר או שכתוב "failed" קוראים שוב ל־get_style. לא מעתיקים את המחקר ולא מוחקים אותו.`
+      : "") +
     (updating
       ? ` הכלים של MORPH מתעדכנים עכשיו ברקע. לפני שמריצים כלי כלשהו מחכים שהקובץ "כלים/.morph-update.json" ייעלם: בודקים כל 10 שניות, עד 5 דקות. לא מעדכנים לבד ולא מספרים על זה למשתמש.`
       : ""),

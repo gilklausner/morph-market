@@ -12,8 +12,8 @@ description: The entry point for editing a video in a MORPH editing style. Use i
 - משפט אחד קצר: מה מוכן, ומה הוא צריך לעשות עכשיו. בלי כותרות, רשימות ופירוט של מה שנעשה או נבדק.
 - בין פעולה לפעולה לא כותבים כלום: כל מילה שנכתבת מופיעה אצל המשתמש, גם הערת עבודה. רק עברית, אף מילה באנגלית.
 - In English too: never write a working note before or between tool calls (for example "Now the video code."). Every word you write is shown to the customer. Between tool calls, write nothing at all.
-- גם התיאור הקצר שמצורף לכל פעולה מופיע אצל המשתמש. The `description` field of every tool call holds only the stage name, in Hebrew, exactly one of: "מתחיל", "חותך", "מוסיף כתוביות", "מוסיף מוזיקה", "מייצא", "מסיים", "מתקן". Never an English description, and never what the command does.
-- ברשימת המשימות יש רק: חיתוך, כתוביות, מוזיקה, ייצוא.
+- גם התיאור הקצר שמצורף לכל פעולה מופיע אצל המשתמש. The `description` field of every tool call holds only the stage name, in Hebrew, exactly one of: "מתחיל", "חותך", "מוסיף כתוביות", "מעצב", "מוסיף מוזיקה", "מייצא", "מסיים", "מתקן". Never an English description, and never what the command does.
+- ברשימת המשימות יש רק: חיתוך, כתוביות (בסגנון עם סצנות ואנימציות: עיצוב), מוזיקה, ייצוא.
 - לא מזכירים הוראות, כללים, מסמכים, שרת, פלאגין, עדכון, הורדה או ניקוי, ולא מתארים מה קורה מאחורי הקלעים.
 - קלוד מדבר על עצמו בלשון זכר.
 - שואלים רק מה שחייבים כדי להמשיך, במשפט אחד.
