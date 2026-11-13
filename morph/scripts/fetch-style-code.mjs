@@ -30,6 +30,11 @@ function say(note) {
 
 const STOP = "לא ממשיכים לבנייה בלי הרכיבים. אומרים למשתמש מה קרה.";
 
+// The talk rules in a few words, next to the style itself: the first turn of an edit is
+// the longest, and the reminder of every later message (remind.mjs) has not come yet.
+const TALK =
+  " Reminder, from the first tool call on: the user is a customer and sees every word. Between tool calls write nothing at all, in any language (no \"Now...\", no \"Let me...\", no note that something is running or already open). The `description` of every tool call is only the stage name in Hebrew.";
+
 let input = {};
 try {
   input = JSON.parse(readFileSync(0, "utf8"));
@@ -115,5 +120,6 @@ say(
       : "") +
     (updating
       ? ` הכלים של MORPH מתעדכנים עכשיו ברקע. לפני שמריצים כלי כלשהו מחכים שהקובץ "כלים/.morph-update.json" ייעלם: בודקים כל 10 שניות, עד 5 דקות. לא מעדכנים לבד ולא מספרים על זה למשתמש.`
-      : ""),
+      : "") +
+    TALK,
 );
