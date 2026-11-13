@@ -55,3 +55,17 @@ export async function removeResearch(entry) {
     if (!(entry.keep ?? []).includes(name)) await rm(join(entry.path, name), { recursive: true, force: true });
   }
 }
+
+/** A session that noted a download longer ago than this no longer holds it for the others. */
+const HOLD_MS = 3 * 60 * 60 * 1000;
+
+/** True when one of the other entries still holds the same download as `entry`. */
+export function held(others, entry) {
+  return others.some(
+    (other) =>
+      other.path === entry.path &&
+      !other.review &&
+      Boolean(other.research) === Boolean(entry.research) &&
+      Date.now() - new Date(other.at).getTime() < HOLD_MS,
+  );
+}

@@ -4,14 +4,15 @@
 // get_style brings them again.
 //
 // A style's downloads leave only after this session was seen working on a video in that
-// style, and only when no video of the style is left: so the start of an edit, before
-// the video's folder exists, removes nothing.
+// style, and only when no video of the style is in work any more: it was cleaned up, or
+// it was exported a while ago and its work files were left. So the start of an edit,
+// before the video's folder exists, removes nothing.
 
 import { readFileSync } from "node:fs";
-import { readdir } from "node:fs/promises";
+import { readdir, stat } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 
-import { readDownloads, removeParts, removeResearch, writeDownloads } from "./downloads.mjs";
+import { held, readDownloads, removeParts, removeResearch, writeDownloads } from "./downloads.mjs";
 
 let session;
 try {
@@ -35,10 +36,27 @@ const holds = async (folder) => {
 };
 /** The style an entry belongs to: the name of the style's folder. */
 const styleOf = (entry) => basename(entry.research ? dirname(entry.path) : entry.path);
+/** A video that was exported this long ago is finished, also when its work files were left behind. */
+const FINISHED_MS = 10 * 60 * 1000;
+
+/** True while a video in a style's folder is in work: it has no final export, or a fresh one. */
+async function inWork(video) {
+  let newest = 0;
+  for (const name of await holds(join(video, "ייצוא"))) {
+    if (name.toLowerCase().endsWith(".mp4")) newest = Math.max(newest, (await stat(join(video, "ייצוא", name))).mtimeMs);
+  }
+  return !newest || Date.now() - newest < FINISHED_MS;
+}
+
 /** True while a video of the entry's style is in work. */
 async function working(entry) {
-  if (entry.research) return (await holds(dirname(entry.path))).some((name) => name !== basename(entry.path));
-  return (await holds(join(entry.path, "videos"))).length > 0;
+  // The videos in work sit in the style's own folder, MORPH/סגנונות עריכה/<style>, and its code in MORPH/כלים/רימושן/src/<style>.
+  const style = entry.research ? dirname(entry.path) : join(entry.path, "..", "..", "..", "..", "סגנונות עריכה", basename(entry.path));
+  const skip = entry.research ? basename(entry.path) : "מחקר";
+  for (const name of (await holds(style)).filter((found) => found !== skip)) {
+    if (await inWork(join(style, name))) return true;
+  }
+  return false;
 }
 
 let changed = false;
@@ -60,7 +78,7 @@ for (const style of new Set(mine.map(styleOf))) {
 const staying = downloads.filter((entry) => !leaving.includes(entry));
 for (const entry of leaving) {
   // Another session that works in the same style keeps what it downloaded.
-  if (staying.some((other) => other.path === entry.path && Boolean(other.research) === Boolean(entry.research) && !other.review)) continue;
+  if (held(staying, entry)) continue;
   if (entry.research) await removeResearch(entry);
   else await removeParts(entry);
 }
