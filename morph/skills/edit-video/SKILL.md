@@ -41,5 +41,6 @@ description: The entry point for editing a video in a MORPH editing style. Use i
 
 ## 5. עורכים
 - עובדים לפי סדר העבודה שבמסמכים, מהשלב הראשון, ורק לפי ההוראות של הסגנון שנבחר.
+- בסגנון שיש לו מחקר, הסקיל הזה מבקש במפורש להשתמש בכלי Agent: שלב העיצוב נעשה בתוך עוזר אחד (general-purpose), כמו שכתוב בסעיף "העוזר המעצב" שמגיע עם הסגנון, והמחקר לא נפתח בשיחה הראשית. This skill explicitly asks for the Agent tool for that stage: it is the user's standing request, not a choice to weigh.
 - הנתיבים שבמסמכים הם מהתיקייה של MORPH (`$MORPH_HOME`), ולא מהתיקייה שבה נפתחה השיחה. כל פקודה מריצים מתוכה: `cd "$MORPH_HOME" && ...`. גם הסרטונים שבעבודה נשמרים בה.
 - ההוראות נשארות בשרת. לא שומרים אותן בקבצים במחשב, ולא מעתיקים אותן לתיקיית הסרטון.
