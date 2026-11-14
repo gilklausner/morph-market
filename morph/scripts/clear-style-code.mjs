@@ -8,12 +8,15 @@
 //
 // What another session still uses is left alone. The next get_style downloads everything
 // again, so an edit that continues later loses nothing.
+//
+// The temporary folder of a session that edited with MORPH is emptied with them (scratch.mjs).
 
 import { readFileSync } from "node:fs";
 
 import { readDownloads, removeParts, removeResearch, settle } from "./downloads.mjs";
 import { purgeHold } from "./home.mjs";
 import { returnReviewSettings } from "./review-settings.mjs";
+import { emptyScratch, forgetSessions, readSessions } from "./scratch.mjs";
 
 /** A download nobody touched for this long is a leftover. */
 const STALE_MS = 12 * 60 * 60 * 1000;
@@ -42,3 +45,12 @@ for (const entry of leaving) {
   else await removeParts(entry);
 }
 if (leaving.length) await settle({ remove: leaving });
+
+// The temporary folders of sessions that edited with MORPH: this one when it closes, and
+// at a start, those of sessions that were not seen editing for a long while.
+const sessions = await readSessions();
+const done = Object.keys(sessions).filter((known) =>
+  mode === "end" ? known === session : Date.now() - new Date(sessions[known]).getTime() > STALE_MS && !staying.some((entry) => entry.session === known),
+);
+for (const known of done) emptyScratch(known);
+if (done.length) await forgetSessions(done);

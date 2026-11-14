@@ -7,6 +7,9 @@
 // style, and only when no video of the style is in work any more: it was cleaned up, or
 // it was exported a while ago and its work files were left. So the start of an edit,
 // before the video's folder exists, removes nothing.
+//
+// When the last of a session's downloads leave, the session's own temporary folder is
+// emptied too (see scratch.mjs).
 
 import { readFileSync } from "node:fs";
 import { readdir, stat } from "node:fs/promises";
@@ -14,6 +17,7 @@ import { basename, dirname, join } from "node:path";
 
 import { held, readDownloads, removeParts, removeResearch, settle } from "./downloads.mjs";
 import { morphHome, purgeHold } from "./home.mjs";
+import { emptyScratch, noteSession } from "./scratch.mjs";
 
 let session;
 try {
@@ -28,6 +32,7 @@ purgeHold();
 const downloads = await readDownloads();
 const mine = downloads.filter((entry) => entry.session === session && !entry.review);
 if (!mine.length) process.exit(0);
+await noteSession(session);
 
 /** What a folder holds, apart from what the computer adds by itself. */
 const holds = async (folder) => {
@@ -83,3 +88,5 @@ for (const entry of leaving) {
   else await removeParts(entry);
 }
 if (seen.length || leaving.length) await settle({ remove: leaving, seen });
+// The video is finished and nothing of this session is in work: its passing work files go too.
+if (leaving.length && !mine.some((entry) => !leaving.includes(entry))) emptyScratch(session);

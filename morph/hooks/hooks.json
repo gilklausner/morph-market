@@ -1,5 +1,5 @@
 {
-  "description": "Brings a style's components and research from the MORPH server when Claude gets the style, and removes them when the video is finished or the session closes; keeps a style's research out of the conversation; keeps the MORPH tools and sound up to date in the background; and points each session at the programs the MORPH tools bring.",
+  "description": "Brings a style's components and research from the MORPH server when Claude gets the style, and removes them, and the session's passing work files, when the video is finished or the session closes; keeps a style's research out of the conversation; keeps the MORPH tools and sound up to date in the background; and points each session at the programs the MORPH tools bring.",
   "hooks": {
     "PostToolUse": [
       {
@@ -13,6 +13,21 @@
               "${CLAUDE_PLUGIN_ROOT}/scripts/fetch-style-code.mjs"
             ],
             "timeout": 60
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh",
+              "${CLAUDE_PLUGIN_ROOT}/scripts/remind.mjs",
+              "tool"
+            ],
+            "timeout": 5
           }
         ]
       }
