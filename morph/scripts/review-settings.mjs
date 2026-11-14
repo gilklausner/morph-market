@@ -1,7 +1,7 @@
-// The review page is opened from the folder the session was opened in, by name, from that
-// folder's ".claude/launch.json". The tools live elsewhere, so at the start of an edit the
-// review page's settings are lent to the session's folder, and taken back when the
-// session closes. Settings that belong to the folder itself are never touched.
+// The review page and the styles page are opened from the folder the session was opened
+// in, by name, from that folder's ".claude/launch.json". The tools live elsewhere, so at
+// the start of an edit their settings are lent to the session's folder, and taken back
+// when the session closes. Settings that belong to the folder itself are never touched.
 
 import { existsSync } from "node:fs";
 import { mkdir, readFile, readdir, rm, rmdir, writeFile } from "node:fs/promises";
@@ -9,7 +9,8 @@ import { join, resolve } from "node:path";
 
 import { readDownloads, writeDownloads } from "./downloads.mjs";
 
-const isReview = (config) => String((config.runtimeArgs ?? [""])[0]).endsWith("/כלים/סקירה/שרת.py");
+// The pages the tools open in the browser pane: the review page of each style, and the styles page.
+const isReview = (config) => ["/כלים/סקירה/שרת.py", "/כלים/בחירת-סגנון/שרת.py"].some((server) => String((config.runtimeArgs ?? [""])[0]).endsWith(server));
 const read = async (file) => {
   try {
     return JSON.parse(await readFile(file, "utf8"));
