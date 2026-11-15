@@ -101,6 +101,7 @@ for (const file of code.files) {
 spawn(process.execPath, [join(import.meta.dirname, "fetch-sound.mjs"), tools], {
   detached: true,
   stdio: "ignore",
+  windowsHide: true,
 }).unref();
 
 // Tools that belong to this style alone: they sit with the other tools while the style is
@@ -151,7 +152,7 @@ if (researching) {
       String(code.research.parts ?? 1),
       owner,
     ],
-    { detached: true, stdio: "ignore" },
+    { detached: true, stdio: "ignore", windowsHide: true },
   ).unref();
 }
 

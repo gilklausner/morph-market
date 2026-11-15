@@ -19,7 +19,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { deviceId } from "./device.mjs";
-import { hide, morphHome } from "./home.mjs";
+import { gitBash, hide, morphHome, unpack } from "./home.mjs";
 import { download, serverAddress } from "./server.mjs";
 
 const MARKER = "כלים/.morph-update.json";
@@ -34,9 +34,9 @@ function claudeProgram() {
   if (process.platform === "win32") return ""; // The Windows installer looks for it by itself.
   let pid = String(process.pid);
   for (let step = 0; step < 8; step += 1) {
-    const parent = spawnSync("ps", ["-o", "ppid=", "-p", pid], { encoding: "utf8" }).stdout?.trim();
+    const parent = spawnSync("ps", ["-o", "ppid=", "-p", pid], { encoding: "utf8", windowsHide: true }).stdout?.trim();
     if (!parent || parent === "1") break;
-    const program = spawnSync("ps", ["-o", "comm=", "-p", parent], { encoding: "utf8" }).stdout?.trim() ?? "";
+    const program = spawnSync("ps", ["-o", "comm=", "-p", parent], { encoding: "utf8", windowsHide: true }).stdout?.trim() ?? "";
     if (program.endsWith("/claude")) return program;
     pid = parent;
   }
@@ -74,6 +74,7 @@ export async function startUpdate(tools) {
   spawn(process.execPath, [fileURLToPath(import.meta.url), "run", tools, here, claudeProgram()], {
     detached: true,
     stdio: "ignore",
+    windowsHide: true,
   }).unref();
   return true;
 }
@@ -92,15 +93,14 @@ async function run(tools, previous, claude) {
     await download(await serverAddress("/kit"), headers(key), archive);
     // On Windows both run in Git Bash, which this script was started from: its tar keeps the Hebrew file names.
     const windows = process.platform === "win32";
-    const bash = process.env.CLAUDE_CODE_GIT_BASH_PATH || "bash";
-    const opened = windows
-      ? spawnSync(bash, ["-lc", 'tar -xzf "$(cygpath -u "$1")" -C "$(cygpath -u "$2")"', "morph", archive, tools])
-      : spawnSync("tar", ["-xzf", archive, "-C", tools]);
+    const bash = gitBash();
+    const opened = { status: unpack(archive, tools, "-xzf") ? 0 : 1 };
     if (opened.status !== 0) throw new Error("the archive did not open");
     const installer = spawnSync(windows ? bash : "zsh", [windows ? "כלים/התקנה-windows.sh" : "כלים/התקנה.sh"], {
       cwd: tools,
       encoding: "utf8",
       timeout: UPDATING_MS,
+      windowsHide: true,
       env: { ...process.env, ...(claude && { MORPH_CLAUDE: claude }) },
     });
     if (installer.status !== 0) throw new Error(`the installer stopped: ${(installer.stdout ?? "").trim().split("\n").slice(-3).join(" | ")}`);
@@ -121,6 +121,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   if (mode === "run" && tools) await run(tools, previous, claude);
   else if (mode === "start") {
     await startUpdate(morphHome());
-    spawn(process.execPath, [join(import.meta.dirname, "fetch-sound.mjs"), morphHome()], { detached: true, stdio: "ignore" }).unref();
+    spawn(process.execPath, [join(import.meta.dirname, "fetch-sound.mjs"), morphHome()], { detached: true, stdio: "ignore", windowsHide: true }).unref();
   }
 }

@@ -12,14 +12,13 @@
 //   { "state": "ready", "version": "", "files": [] } everything is in place; the files MORPH brought
 //   { "state": "failed", "error": "" }
 
-import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve, sep } from "node:path";
 
 import { deviceId } from "./device.mjs";
-import { hide, morphHome } from "./home.mjs";
+import { hide, morphHome, unpack } from "./home.mjs";
 import { download, serverAddress } from "./server.mjs";
 
 const MARKER = "סאונד/.morph-sound.json";
@@ -73,7 +72,7 @@ try {
 
   // The archive is laid out like the MORPH folder, and its last file is the list of
   // what it holds, which replaces the "loading" note only when everything is in place.
-  const unpacked = spawnSync("tar", ["-xf", archive, "-C", tools]);
+  const unpacked = { status: unpack(archive, tools) ? 0 : 1 };
   if (unpacked.status !== 0) throw new Error("הקובץ שירד לא נפתח");
   const files = inside((await read())?.files);
   if (!files) throw new Error("הקובץ שירד לא שלם");

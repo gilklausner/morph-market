@@ -17,7 +17,6 @@
 //   { "state": "ready", "version": "", "files": [] } everything is in place
 //   { "state": "failed", "error": "" }
 
-import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -25,6 +24,7 @@ import { join, resolve, sep } from "node:path";
 
 import { deviceId } from "./device.mjs";
 import { readDownloads, removeResearch } from "./downloads.mjs";
+import { unpack } from "./home.mjs";
 import { download, serverAddress } from "./server.mjs";
 
 const MARKER = ".morph-research.json";
@@ -69,7 +69,7 @@ try {
   }
   // The archive is laid out like the MORPH folder, and its last file is the list of what
   // it holds, which replaces the "loading" note only when everything is in place.
-  const unpacked = spawnSync("tar", ["-xf", archive, "-C", tools]);
+  const unpacked = { status: unpack(archive, tools) ? 0 : 1 };
   if (own) await writeFile(list, own);
   if (unpacked.status !== 0) throw new Error("הקובץ שירד לא נפתח");
   const files = inside((await read())?.files);

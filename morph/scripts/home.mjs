@@ -22,7 +22,35 @@ export function hide() {
   if (!existsSync(home)) return;
   const paths = [home, ...readdirSync(home).map((name) => join(home, name))];
   if (process.platform === "darwin") spawnSync("chflags", ["hidden", ...paths]);
-  else if (process.platform === "win32") for (const path of paths) spawnSync("attrib", ["+h", path]);
+  else if (process.platform === "win32") for (const path of paths) spawnSync("attrib", ["+h", path], { windowsHide: true });
+}
+
+/**
+ * Git Bash on Windows: the one Claude Code was told about, the usual places, or MORPH's own
+ * copy. Never a bare "bash": on Windows that can be another program of the same name.
+ */
+export function gitBash() {
+  const local = process.env.LOCALAPPDATA || join(homedir(), "AppData", "Local");
+  const places = [
+    process.env.CLAUDE_CODE_GIT_BASH_PATH,
+    join(process.env.ProgramFiles || "C:\\Program Files", "Git", "bin", "bash.exe"),
+    join(local, "Programs", "Git", "bin", "bash.exe"),
+    join(local, "MORPH-git", "bin", "bash.exe"),
+  ];
+  return places.find((place) => place && existsSync(place)) ?? "bash";
+}
+
+/**
+ * Opens an archive into a folder. True when it opened. On Windows it is opened by the tar
+ * of Git Bash, with the paths in its own form: a plain "tar" there reads "C:" as the name
+ * of another computer, and the Windows one breaks the Hebrew file names.
+ */
+export function unpack(archive, folder, flags = "-xf") {
+  const opened =
+    process.platform === "win32"
+      ? spawnSync(gitBash(), ["-lc", `tar ${flags} "$(cygpath -u "$1")" -C "$(cygpath -u "$2")"`, "morph", archive, folder], { windowsHide: true })
+      : spawnSync("tar", [flags, archive, "-C", folder]);
+  return opened.status === 0;
 }
 
 /** Things that sat in the holding folder for longer than this are removed. */

@@ -1,7 +1,7 @@
 {
   "name": "morph",
   "displayName": "MORPH",
-  "version": "0.9.7",
+  "version": "0.9.8",
   "description": "MORPH video editing styles",
   "author": { "name": "MORPH" },
   "userConfig": {

@@ -50,6 +50,8 @@ export const forgetSessions = (gone) =>
 
 /** Where Claude keeps the temporary folders of its sessions on this computer. */
 function roots() {
+  // Windows: <the temporary folder>\claude\<the session's folder>\<session id>\scratchpad
+  if (process.platform === "win32") return [...new Set([tmpdir(), process.env.CLAUDE_CODE_TMPDIR].filter(Boolean).map((base) => join(base, "claude")))];
   let user = "";
   try {
     user = String(userInfo().uid);
