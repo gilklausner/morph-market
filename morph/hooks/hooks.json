@@ -72,7 +72,8 @@
           {
             "type": "command",
             "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh\" \"${CLAUDE_PLUGIN_ROOT}/scripts/guard-research.mjs\"",
-            "timeout": 5
+            "timeout": 5,
+            "onFailure": "continue"
           }
         ]
       }

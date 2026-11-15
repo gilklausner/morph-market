@@ -1,0 +1,4 @@
+# The same line endings on every computer, whatever its Git is set to: the shell scripts
+# break with Windows endings, and the Windows command file needs them.
+* text=auto eol=lf
+*.cmd text eol=crlf
