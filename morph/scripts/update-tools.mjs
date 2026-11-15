@@ -6,13 +6,14 @@
 //                                           also starts the check of the sound
 //   node update-tools.mjs run <tools> ...   the update itself, started by startUpdate
 //
-// fetch-style-code.mjs calls startUpdate too, at the start of every edit.
+// fetch-style-code.mjs calls startUpdate too, whenever a style is asked for. An update starts only
+// when no video is in work: at the start of a new video, or when a session opens with nothing in work.
 //
 // While an update runs, the file "כלים/.morph-update.json" exists in the tools folder.
 // An edit waits until it is gone.
 
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { appendFile, mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -43,6 +44,36 @@ function claudeProgram() {
   return "";
 }
 
+/** A video that was touched this recently is in work. One that was left behind long ago does not hold updates back. */
+const IN_WORK_MS = 12 * 60 * 60 * 1000;
+
+/** True when a video is being edited now: a video's folder, in any style, with something that changed lately. */
+export function videoInWork(tools, now = Date.now()) {
+  const styles = join(tools, "סגנונות עריכה");
+  const list = (folder) => {
+    try {
+      return readdirSync(folder).filter((name) => !name.startsWith("."));
+    } catch {
+      return [];
+    }
+  };
+  const touched = (path) => {
+    try {
+      return now - statSync(path).mtimeMs < IN_WORK_MS;
+    } catch {
+      return false;
+    }
+  };
+  for (const style of list(styles)) {
+    for (const video of list(join(styles, style))) {
+      if (video === "מחקר") continue; // The style's research, not a video.
+      const folder = join(styles, style, video);
+      if (touched(folder) || list(folder).some((name) => touched(join(folder, name)))) return true;
+    }
+  }
+  return false;
+}
+
 /**
  * Starts an update when the tools in the folder are not the current ones. Answers true
  * when an update is running (this one or an earlier one), so the caller can tell Claude
@@ -58,6 +89,9 @@ export async function startUpdate(tools) {
   } catch {
     // No update is running.
   }
+  // Never in the middle of a video: an update replaces the tools while they are being used, and on a
+  // slow computer it takes long. It waits for the start of the next video.
+  if (videoInWork(tools)) return false;
 
   let current;
   try {

@@ -60,14 +60,22 @@ const holds = async (folder) => {
 };
 /** The style an entry belongs to: the name of the style's folder. */
 const styleOf = (entry) => entry.style ?? basename(entry.research ? dirname(entry.path) : entry.path);
-/** A video that was exported this long ago is finished, also when its work files were left behind. */
-const FINISHED_MS = 10 * 60 * 1000;
+/**
+ * A video whose final export is this old is finished, also when its work files were left
+ * behind. An hour, and not minutes: on a slow computer the checks that follow the export,
+ * and a fix the user asks for right after it, take long, and the style's components and
+ * the session's work files are still in use then.
+ */
+const FINISHED_MS = 60 * 60 * 1000;
 
 /** True while a video in a style's folder is in work: it has no final export, or a fresh one. */
 async function inWork(video) {
   let newest = 0;
   for (const name of await holds(join(video, "ייצוא"))) {
-    if (name.toLowerCase().endsWith(".mp4")) newest = Math.max(newest, (await stat(join(video, "ייצוא", name))).mtimeMs);
+    // The "before" version is made at the start of the export. On a slow computer the final file comes
+    // an hour later, so the "before" version says nothing about the video being finished.
+    if (!name.toLowerCase().endsWith(".mp4") || name.includes("לפני")) continue;
+    newest = Math.max(newest, (await stat(join(video, "ייצוא", name))).mtimeMs);
   }
   return !newest || Date.now() - newest < FINISHED_MS;
 }
