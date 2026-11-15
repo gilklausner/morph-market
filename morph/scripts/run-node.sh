@@ -6,12 +6,18 @@
 # plugin's scripts run in Git Bash).
 if [ -n "${MORPH_HOME:-}" ]; then
   dir="$MORPH_HOME"
-elif [ -n "${LOCALAPPDATA:-}" ] && command -v cygpath >/dev/null 2>&1; then
-  dir="$(cygpath -m "$LOCALAPPDATA")/MORPH"
+elif [ -n "${LOCALAPPDATA:-}" ]; then
+  # Windows. The folder is taken as Windows wrote it: asking cygpath for it starts another
+  # program, and this runs after every command Claude runs.
+  dir="$LOCALAPPDATA/MORPH"
 else
   dir="$HOME/Library/Application Support/MORPH"
 fi
-if [ -x "$dir/כלים/bin/node" ]; then
+# On Windows, Node itself and not its shortcut in "כלים/bin": the shortcut is a shell script
+# of its own, and starting it costs two more programs on every run.
+if [ -x "$dir/כלים/.runtime/node/node.exe" ]; then
+  exec "$dir/כלים/.runtime/node/node.exe" "$@"
+elif [ -x "$dir/כלים/bin/node" ]; then
   exec "$dir/כלים/bin/node" "$@"
 elif command -v node >/dev/null 2>&1; then
   exec node "$@"

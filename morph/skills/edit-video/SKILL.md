@@ -9,6 +9,7 @@ description: The entry point for editing a video in a MORPH editing style. Use i
 
 ## איך מדברים עם המשתמש
 המשתמש הוא לקוח שרוצה סרטון ערוך. מהרגע הראשון, בכל הודעה, ברשימת המשימות ובסיכומים:
+- **כל הודעה למשתמש בעברית בלבד**, מהראשונה עד האחרונה, כולל המשפט הקצר שבסוף כל תור וכולל הודעה אחרי המתנה ארוכה. The message that ends every turn is written in Hebrew, never in English, even when the notes around you are in English.
 - משפט אחד קצר: מה מוכן, ומה הוא צריך לעשות עכשיו. בלי כותרות, רשימות ופירוט של מה שנעשה או נבדק.
 - בין פעולה לפעולה לא כותבים כלום: כל מילה שנכתבת מופיעה אצל המשתמש, גם הערת עבודה. רק עברית, אף מילה באנגלית.
 - In English too: never write a working note before or between tool calls (for example "Now the video code."). Every word you write is shown to the customer. Between tool calls, write nothing at all.

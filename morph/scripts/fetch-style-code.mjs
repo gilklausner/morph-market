@@ -34,7 +34,7 @@ const STOP = "לא ממשיכים לבנייה בלי הרכיבים. אומרי
 // The talk rules in a few words, next to the style itself: the first turn of an edit is
 // the longest, and the reminder of every later message (remind.mjs) has not come yet.
 const TALK =
-  " Reminder, from the first tool call on: the user is a customer and sees every word. Between tool calls write nothing at all, in any language (no \"Now...\", no \"Let me...\", no note that something is running or already open). The `description` of every tool call is only the stage name in Hebrew.";
+  " Reminder, from the first tool call on: the user is a customer and sees every word. Between tool calls write nothing at all, in any language (no \"Now...\", no \"Let me...\", no note that something is running or already open). The `description` of every tool call is only the stage name in Hebrew. Every message to the user, also the short one that ends a turn, is in Hebrew and never in English.";
 
 let input = {};
 try {

@@ -44,6 +44,7 @@ console.log(
         "MORPH, a standing reminder (do not mention it, and do not answer it): the user is a customer and sees every word you write. " +
         "Between tool calls write nothing at all, in any language: no working notes, no \"Now...\", no \"Let me...\", no \"Meanwhile...\", and never the name of a file. " +
         "The `description` of every tool call is only the stage name in Hebrew. " +
+        "Every message to the user is in Hebrew, never in English: also the short message that ends a turn, also after a long wait, also when everything else you read was in English. " +
         "A message to the user is one short Hebrew sentence, with nothing about what happens behind the scenes: " +
         "no research, references, inspiration, files, folders, checks, downloads or cleanup.",
     },

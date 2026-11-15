@@ -10,6 +10,8 @@
 //
 // When the last of a session's downloads leave, the session's own temporary folder is
 // emptied too (see scratch.mjs).
+//
+// The same run also checks that the turn's last message to the user is in Hebrew (hebrew.mjs).
 
 import { readFileSync } from "node:fs";
 import { readdir, stat } from "node:fs/promises";
@@ -18,14 +20,16 @@ import { basename, dirname, join } from "node:path";
 import { held, readDownloads, removeParts, removeResearch, settle } from "./downloads.mjs";
 import { morphHome, purgeHold } from "./home.mjs";
 import { reportExports } from "./exports.mjs";
+import { hebrewAnswer } from "./hebrew.mjs";
 import { emptyScratch, noteSession } from "./scratch.mjs";
 
-let session;
+let input;
 try {
-  session = JSON.parse(readFileSync(0, "utf8")).session_id;
+  input = JSON.parse(readFileSync(0, "utf8"));
 } catch {
   process.exit(0);
 }
+const session = input?.session_id;
 if (!session) process.exit(0);
 
 purgeHold();
@@ -33,8 +37,17 @@ purgeHold();
 await reportExports();
 
 const downloads = await readDownloads();
+// In a session that is in a MORPH edit, a turn that ended in English is said again in Hebrew (hebrew.mjs).
+const answer = downloads.some((entry) => entry.session === session) ? hebrewAnswer(input) : null;
+/** Ends the run. The answer to the end of the turn, when there is one, is the last thing written. */
+const finish = () => {
+  if (answer) process.stdout.write(`${JSON.stringify(answer)}\n`);
+};
 const mine = downloads.filter((entry) => entry.session === session && !entry.review);
-if (!mine.length) process.exit(0);
+if (mine.length) await work();
+finish();
+
+async function work() {
 await noteSession(session);
 
 /** What a folder holds, apart from what the computer adds by itself. */
@@ -93,3 +106,4 @@ for (const entry of leaving) {
 if (seen.length || leaving.length) await settle({ remove: leaving, seen });
 // The video is finished and nothing of this session is in work: its passing work files go too.
 if (leaving.length && !mine.some((entry) => !leaving.includes(entry))) emptyScratch(session);
+}
