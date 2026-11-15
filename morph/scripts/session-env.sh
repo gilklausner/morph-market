@@ -12,10 +12,14 @@ else
   dir="$HOME/Library/Application Support/MORPH"
 fi
 if [ -n "${CLAUDE_ENV_FILE:-}" ] && [ -d "$dir/כלים/bin" ]; then
-  printf 'export MORPH_HOME="%s"\nexport PATH="%s/כלים/bin:$PATH"\n' "$dir" "$dir" >> "$CLAUDE_ENV_FILE"
-  # On Windows: Windows programs find node.exe in its own folder, and Python speaks UTF-8, since it prints Hebrew.
   if [ -n "${LOCALAPPDATA:-}" ] && command -v cygpath >/dev/null 2>&1; then
-    printf 'export PATH="$PATH:%s/כלים/.runtime/node"\nexport PYTHONUTF8=1\nexport PYTHONIOENCODING=utf-8\n' "$dir" >> "$CLAUDE_ENV_FILE"
+    # Windows. Git Bash's search path is split by colons, so the folder goes into it in Git Bash's own
+    # form (/c/Users/...). Windows programs find node.exe in its own folder, and Python speaks UTF-8,
+    # since it prints Hebrew.
+    unix="$(cygpath -u "$dir")"
+    printf 'export MORPH_HOME="%s"\nexport PATH="%s/כלים/bin:$PATH:%s/כלים/.runtime/node"\nexport PYTHONUTF8=1\nexport PYTHONIOENCODING=utf-8\n' "$dir" "$unix" "$unix" >> "$CLAUDE_ENV_FILE"
+  else
+    printf 'export MORPH_HOME="%s"\nexport PATH="%s/כלים/bin:$PATH"\n' "$dir" "$dir" >> "$CLAUDE_ENV_FILE"
   fi
 fi
 exit 0
