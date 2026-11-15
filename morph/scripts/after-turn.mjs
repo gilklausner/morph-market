@@ -11,7 +11,7 @@
 // When the last of a session's downloads leave, the session's own temporary folder is
 // emptied too (see scratch.mjs).
 //
-// The same run also checks that the turn's last message to the user is in Hebrew (hebrew.mjs).
+// The same run also checks that the turn's last message is in the user's language (hebrew.mjs).
 
 import { readFileSync } from "node:fs";
 import { readdir, stat } from "node:fs/promises";
@@ -37,7 +37,7 @@ purgeHold();
 await reportExports();
 
 const downloads = await readDownloads();
-// In a session that is in a MORPH edit, a turn that ended in English is said again in Hebrew (hebrew.mjs).
+// In a session that is in a MORPH edit, for a user who writes Hebrew, a turn that ended in English is said again in Hebrew (hebrew.mjs).
 const answer = downloads.some((entry) => entry.session === session) ? hebrewAnswer(input) : null;
 /** Ends the run. The answer to the end of the turn, when there is one, is the last thing written. */
 const finish = () => {

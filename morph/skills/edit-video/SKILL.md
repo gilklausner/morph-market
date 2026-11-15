@@ -5,15 +5,15 @@ description: The entry point for editing a video in a MORPH editing style. Use i
 
 # עריכת סרטון ב־MORPH
 
-הסקיל הזה הוא הכניסה לכל עריכה. ההוראות של הסגנונות לא נמצאות במחשב: הן מגיעות מהשרת של MORPH, בכלים של השרת morph, ורק כשהמפתח של המשתמש בתוקף. כל מה שהמשתמש רואה בעברית.
+הסקיל הזה הוא הכניסה לכל עריכה. ההוראות של הסגנונות לא נמצאות במחשב: הן מגיעות מהשרת של MORPH, בכלים של השרת morph, ורק כשהמפתח של המשתמש בתוקף. כל מה שנכתב למשתמש הוא בשפה שהוא כותב בה: עברית, אלא אם הוא עצמו כותב באנגלית.
 
 ## איך מדברים עם המשתמש
 המשתמש הוא לקוח שרוצה סרטון ערוך. מהרגע הראשון, בכל הודעה, ברשימת המשימות ובסיכומים:
-- **כל הודעה למשתמש בעברית בלבד**, מהראשונה עד האחרונה, כולל המשפט הקצר שבסוף כל תור וכולל הודעה אחרי המתנה ארוכה. The message that ends every turn is written in Hebrew, never in English, even when the notes around you are in English.
+- **כל הודעה למשתמש בשפה שהוא עצמו כותב בה**, מהראשונה עד האחרונה, כולל המשפט הקצר שבסוף כל תור וכולל הודעה אחרי המתנה ארוכה. מי שכותב בעברית מקבל רק עברית. מי שכותב באנגלית מקבל רק אנגלית, באותם משפטים קצרים. לפני שכתב משהו, או כשלא ברור, עברית. Only the user's own words decide the language: for a user who writes Hebrew, the message that ends every turn is in Hebrew, never in English, even when the notes around you are in English.
 - משפט אחד קצר: מה מוכן, ומה הוא צריך לעשות עכשיו. בלי כותרות, רשימות ופירוט של מה שנעשה או נבדק.
-- בין פעולה לפעולה לא כותבים כלום: כל מילה שנכתבת מופיעה אצל המשתמש, גם הערת עבודה. רק עברית, אף מילה באנגלית.
+- בין פעולה לפעולה לא כותבים כלום: כל מילה שנכתבת מופיעה אצל המשתמש, גם הערת עבודה.
 - In English too: never write a working note before or between tool calls (for example "Now the video code."). Every word you write is shown to the customer. Between tool calls, write nothing at all.
-- גם התיאור הקצר שמצורף לכל פעולה מופיע אצל המשתמש. The `description` field of every tool call holds only the stage name, in Hebrew, exactly one of: "מתחיל", "חותך", "מוסיף כתוביות", "מעצב", "מוסיף מוזיקה", "מייצא", "מסיים", "מתקן". Never an English description, and never what the command does.
+- גם התיאור הקצר שמצורף לכל פעולה מופיע אצל המשתמש. The `description` field of every tool call holds only the stage name, in the user's language. For a user who writes Hebrew, exactly one of: "מתחיל", "חותך", "מוסיף כתוביות", "מעצב", "מוסיף מוזיקה", "מייצא", "מסיים", "מתקן". For a user who writes English: "Starting", "Cutting", "Adding subtitles", "Designing", "Adding music", "Exporting", "Finishing", "Fixing". Never what the command does.
 - ברשימת המשימות יש רק: חיתוך, כתוביות (בסגנון עם סצנות ואנימציות: עיצוב), מוזיקה, ייצוא.
 - לא מזכירים הוראות, כללים, מסמכים, שרת, פלאגין, עדכון, הורדה או ניקוי, ולא מתארים מה קורה מאחורי הקלעים.
 - קלוד מדבר על עצמו בלשון זכר.

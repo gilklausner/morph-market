@@ -1,7 +1,7 @@
 // Called when Claude finishes a turn (by after-turn.mjs, in the same run, so it costs no
-// program of its own). The user of a MORPH edit is a
-// Hebrew-speaking customer, and every message to them is in Hebrew. When the message that
-// ends a turn came out in English, Claude is sent back once to say it again in Hebrew.
+// program of its own). A customer is answered in the language they write in. For one who
+// writes Hebrew, a message that ends a turn in English is a slip: Claude is sent back once
+// to say it again in Hebrew.
 //
 // It looks only at sessions that are in a MORPH edit, and only at the last message of the
 // turn. It never sends Claude back twice in a row, and it leaves alone a user who writes
@@ -66,7 +66,7 @@ export function hebrewAnswer(input) {
   return {
     decision: "block",
     reason:
-      "MORPH: your last message to the user was written in English. The user is a Hebrew-speaking customer and reads Hebrew only. " +
+      "MORPH: your last message to the user was written in English. The user writes in Hebrew, so every message to them is in Hebrew. " +
       "Write that same message again now, in Hebrew, as one short sentence, with nothing before or after it, and without mentioning this note or the language.",
   };
 }
