@@ -27,8 +27,18 @@ function lastMessage(input) {
   return "";
 }
 
+/** What the user typed themself in one piece of a message: nothing when the app wrote the piece in the user's name. */
+function ownWords(text) {
+  // A reminder of the app can come before the user's words, in the same piece or in a piece of its own.
+  const rest = String(text ?? "").replace(/<system-reminder>[\s\S]*?<\/system-reminder>/g, " ").trim();
+  // Notices, a skill's text and a message of another session are not the user's own words.
+  if (/^(<|\[|Base directory for this skill|Another Claude session|This session is being continued|Stop hook feedback)/.test(rest)) return "";
+  return rest;
+}
+
 /** True when the last thing the user typed themself was in English: then Claude answers in English, and nothing is checked. */
 function userWritesEnglish(input) {
+  let shortEnglish = false;
   try {
     const lines = readFileSync(input.transcript_path, "utf8").trimEnd().split("\n");
     for (let i = lines.length - 1, seen = 0; i >= 0 && seen < 600; i -= 1, seen += 1) {
@@ -36,18 +46,33 @@ function userWritesEnglish(input) {
       const entry = JSON.parse(lines[i]);
       if (entry.type !== "user" || entry.isMeta || entry.isSidechain) continue;
       const content = entry.message?.content;
-      const typed = typeof content === "string" ? content : (content ?? []).filter((part) => part.type === "text").map((part) => part.text).join(" ");
-      // What the app writes in the user's name (reminders, notices, a skill's text) is not the user's own words.
-      if (!typed.trim() || /^\s*(<|\[|Base directory for this skill|Another Claude session|This session is being continued)/.test(typed)) continue;
+      const pieces = typeof content === "string" ? [content] : (content ?? []).filter((part) => part.type === "text").map((part) => part.text);
+      // The name of a file or a folder is not the user's language: a path, a quoted name, a name with an ending.
+      const typed = pieces
+        .map(ownWords)
+        .filter(Boolean)
+        .join(" ")
+        .replace(/`[^`]*`/g, " ")
+        .replace(/"[^"]*"/g, " ")
+        .replace(/\S*[\/\\]\S*/g, " ")
+        .replace(/\S+\.[A-Za-z0-9]{2,4}(?=[\s.,!?)]|$)/g, " ");
       const latin = (typed.match(/[A-Za-z]/g) ?? []).length;
       const hebrew = (typed.match(/[\u0590-\u05FF]/g) ?? []).length;
-      if (latin + hebrew < 3) continue; // A number or a mark alone says nothing about the language.
-      return hebrew === 0;
+      // Words in Hebrew, even a few, are the user's own: Claude never offers a Hebrew button to a user who writes English.
+      if (hebrew >= 3 && latin <= hebrew * 2) return false;
+      // A click on a button or a few words in English say too little: the message before them decides,
+      // and they decide only when there is none.
+      if (latin + hebrew < 25) {
+        if (latin >= 3 && hebrew === 0) shortEnglish = true;
+        continue;
+      }
+      return latin > hebrew * 2;
     }
   } catch {
     // No transcript to read: the user is taken to write Hebrew.
+    return false;
   }
-  return false;
+  return shortEnglish;
 }
 
 /**
