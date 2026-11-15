@@ -7,11 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh",
-            "args": [
-              "${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh",
-              "${CLAUDE_PLUGIN_ROOT}/scripts/lend-pages.mjs"
-            ],
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh\" \"${CLAUDE_PLUGIN_ROOT}/scripts/lend-pages.mjs\"",
             "timeout": 10
           }
         ]
@@ -21,11 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh",
-            "args": [
-              "${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh",
-              "${CLAUDE_PLUGIN_ROOT}/scripts/fetch-style-code.mjs"
-            ],
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh\" \"${CLAUDE_PLUGIN_ROOT}/scripts/fetch-style-code.mjs\"",
             "timeout": 60
           }
         ]
@@ -35,12 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh",
-            "args": [
-              "${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh",
-              "${CLAUDE_PLUGIN_ROOT}/scripts/remind.mjs",
-              "tool"
-            ],
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh\" \"${CLAUDE_PLUGIN_ROOT}/scripts/remind.mjs\" tool",
             "timeout": 5
           }
         ]
@@ -51,12 +38,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh",
-            "args": [
-              "${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh",
-              "${CLAUDE_PLUGIN_ROOT}/scripts/clear-style-code.mjs",
-              "end"
-            ],
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh\" \"${CLAUDE_PLUGIN_ROOT}/scripts/clear-style-code.mjs\" end",
             "timeout": 10
           }
         ]
@@ -67,30 +49,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh",
-            "args": [
-              "${CLAUDE_PLUGIN_ROOT}/scripts/session-env.sh"
-            ],
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/session-env.sh\"",
             "timeout": 5
           },
           {
             "type": "command",
-            "command": "sh",
-            "args": [
-              "${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh",
-              "${CLAUDE_PLUGIN_ROOT}/scripts/clear-style-code.mjs",
-              "start"
-            ],
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh\" \"${CLAUDE_PLUGIN_ROOT}/scripts/clear-style-code.mjs\" start",
             "timeout": 10
           },
           {
             "type": "command",
-            "command": "sh",
-            "args": [
-              "${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh",
-              "${CLAUDE_PLUGIN_ROOT}/scripts/update-tools.mjs",
-              "start"
-            ],
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh\" \"${CLAUDE_PLUGIN_ROOT}/scripts/update-tools.mjs\" start",
             "timeout": 10
           }
         ]
@@ -102,11 +71,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh",
-            "args": [
-              "${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh",
-              "${CLAUDE_PLUGIN_ROOT}/scripts/guard-research.mjs"
-            ],
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh\" \"${CLAUDE_PLUGIN_ROOT}/scripts/guard-research.mjs\"",
             "timeout": 5
           }
         ]
@@ -117,11 +82,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh",
-            "args": [
-              "${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh",
-              "${CLAUDE_PLUGIN_ROOT}/scripts/after-turn.mjs"
-            ],
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh\" \"${CLAUDE_PLUGIN_ROOT}/scripts/after-turn.mjs\"",
             "timeout": 10
           }
         ]
@@ -132,11 +93,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh",
-            "args": [
-              "${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh",
-              "${CLAUDE_PLUGIN_ROOT}/scripts/remind.mjs"
-            ],
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh\" \"${CLAUDE_PLUGIN_ROOT}/scripts/remind.mjs\"",
             "timeout": 5
           }
         ]
@@ -147,11 +104,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh",
-            "args": [
-              "${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh",
-              "${CLAUDE_PLUGIN_ROOT}/scripts/after-helper.mjs"
-            ],
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh\" \"${CLAUDE_PLUGIN_ROOT}/scripts/after-helper.mjs\"",
             "timeout": 10
           }
         ]

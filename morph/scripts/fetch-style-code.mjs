@@ -111,7 +111,7 @@ if (ownTools && ownTools.startsWith(resolve(tools) + sep) && existsSync(ownTools
   for (const file of code.tools.files ?? []) {
     const path = resolve(ownTools, file.path);
     if (dirname(path) !== ownTools) continue; // Only files, right inside the tools' folder.
-    await writeFile(path, file.text.replaceAll("/opt/homebrew/bin/", `${join(tools, "כלים", "bin")}/`));
+    await writeFile(path, file.text.replaceAll("/opt/homebrew/bin/", `${join(tools, "כלים", "bin").replaceAll("\\", "/")}/`));
     toolNames.push(file.path);
   }
   if (toolNames.length) await noteDownload(ownTools, toolNames, input.session_id ?? "unknown", code.name);

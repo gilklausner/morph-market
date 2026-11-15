@@ -31,6 +31,7 @@ const headers = (key) => ({ Authorization: `Bearer ${key}`, "X-Morph-Device": de
 
 /** The Claude Code program this session runs in, which the installer updates the plugin with. */
 function claudeProgram() {
+  if (process.platform === "win32") return ""; // The Windows installer looks for it by itself.
   let pid = String(process.pid);
   for (let step = 0; step < 8; step += 1) {
     const parent = spawnSync("ps", ["-o", "ppid=", "-p", pid], { encoding: "utf8" }).stdout?.trim();
@@ -89,8 +90,14 @@ async function run(tools, previous, claude) {
   };
   try {
     await download(await serverAddress("/kit"), headers(key), archive);
-    if (spawnSync("tar", ["-xzf", archive, "-C", tools]).status !== 0) throw new Error("the archive did not open");
-    const installer = spawnSync("zsh", ["כלים/התקנה.sh"], {
+    // On Windows both run in Git Bash, which this script was started from: its tar keeps the Hebrew file names.
+    const windows = process.platform === "win32";
+    const bash = process.env.CLAUDE_CODE_GIT_BASH_PATH || "bash";
+    const opened = windows
+      ? spawnSync(bash, ["-lc", 'tar -xzf "$(cygpath -u "$1")" -C "$(cygpath -u "$2")"', "morph", archive, tools])
+      : spawnSync("tar", ["-xzf", archive, "-C", tools]);
+    if (opened.status !== 0) throw new Error("the archive did not open");
+    const installer = spawnSync(windows ? bash : "zsh", [windows ? "כלים/התקנה-windows.sh" : "כלים/התקנה.sh"], {
       cwd: tools,
       encoding: "utf8",
       timeout: UPDATING_MS,

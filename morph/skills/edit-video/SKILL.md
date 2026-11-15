@@ -29,7 +29,7 @@ description: The entry point for editing a video in a MORPH editing style. Use i
 
 ## 2. בודקים שהכלים מותקנים
 הכלים של MORPH (חיתוך, תמלול, רימושן, סקירה וסאונד) יושבים בתיקייה קבועה במחשב, ולא בתיקייה שבה נפתחה השיחה. המקום שלה נמצא במשתנה `MORPH_HOME`, והוא:
-`$HOME/Library/Application Support/MORPH`
+`$HOME/Library/Application Support/MORPH` (במק), או `AppData/Local/MORPH` בתיקיית המשתמש (ב־Windows)
 אם אין בה התיקיות "כלים" ו"חיתוך", או שהמשתמש ביקש להתקין או לעדכן את הכלים, קוראים ל־get_tools ועובדים בדיוק לפי מה שחזר. את המקום של התיקייה לא מציגים למשתמש. אם המשתמש ביקש רק התקנה או עדכון, עוצרים כאן כשהיא מסתיימת.
 
 ## 3. בוחרים סגנון

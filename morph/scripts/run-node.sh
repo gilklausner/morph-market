@@ -2,7 +2,15 @@
 # Runs one of the plugin's Node scripts. The MORPH tools bring their own Node, inside
 # the MORPH folder, so the plugin never needs one installed on the computer. Before the
 # tools are installed there is nothing for these scripts to do, and it ends quietly.
-dir="${MORPH_HOME:-$HOME/Library/Application Support/MORPH}"
+# The MORPH folder: in the user's Library on a Mac, in AppData\Local on Windows (where the
+# plugin's scripts run in Git Bash).
+if [ -n "${MORPH_HOME:-}" ]; then
+  dir="$MORPH_HOME"
+elif [ -n "${LOCALAPPDATA:-}" ] && command -v cygpath >/dev/null 2>&1; then
+  dir="$(cygpath -m "$LOCALAPPDATA")/MORPH"
+else
+  dir="$HOME/Library/Application Support/MORPH"
+fi
 if [ -x "$dir/כלים/bin/node" ]; then
   exec "$dir/כלים/bin/node" "$@"
 elif command -v node >/dev/null 2>&1; then
