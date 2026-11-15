@@ -16,6 +16,7 @@ import { dirname, join, resolve, sep } from "node:path";
 
 import { deviceId } from "./device.mjs";
 import { noteDownload, noteResearch } from "./downloads.mjs";
+import { knownVideos } from "./exports.mjs";
 import { hide, morphHome } from "./home.mjs";
 import { lendReviewSettings } from "./review-settings.mjs";
 import { startUpdate } from "./update-tools.mjs";
@@ -59,11 +60,24 @@ const address = new URL(`/code/${encodeURIComponent(style)}`, mcp.mcpServers.mor
 
 let answer;
 try {
-  answer = await fetch(address, { headers: { Authorization: `Bearer ${key}`, "X-Morph-Device": deviceId() } });
+  // The videos on this computer are named too: a used-up package still lets an exported video be fixed.
+  answer = await fetch(address, { headers: { Authorization: `Bearer ${key}`, "X-Morph-Device": deviceId(), "X-Morph-Videos": knownVideos().join(",") } });
 } catch {
   say(`הרכיבים של הסגנון לא ירדו: אין חיבור לשרת של MORPH. ${STOP}`);
 }
 if (answer.status === 401 || answer.status === 404) process.exit(0); // The style itself was refused too.
+if (answer.status === 403) {
+  // The user's package is used up: the server hands no components for a new video.
+  const refused = await answer.json().catch(() => ({}));
+  if (refused.error === "package") {
+    say(
+      `הרכיבים של הסגנון לא ירדו, כי החבילה של המשתמש נוצלה. סרטון חדש לא מתחילים ולא ממשיכים: אומרים למשתמש רק "${refused.say}", ועוצרים.` +
+        (refused.fixes
+          ? " אם המשתמש ביקש תיקון בסרטון שכבר יוצא, מחזירים קודם את תיקיית הסרטון למקומה, וקוראים שוב ל־get_style."
+          : " גם תיקון לא עושים עד שהחבילה מתחדשת."),
+    );
+  }
+}
 if (!answer.ok) say(`הרכיבים של הסגנון לא ירדו: השרת של MORPH ענה ${answer.status}. ${STOP}`);
 
 const code = await answer.json();

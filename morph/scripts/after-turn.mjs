@@ -17,6 +17,7 @@ import { basename, dirname, join } from "node:path";
 
 import { held, readDownloads, removeParts, removeResearch, settle } from "./downloads.mjs";
 import { morphHome, purgeHold } from "./home.mjs";
+import { reportExports } from "./exports.mjs";
 import { emptyScratch, noteSession } from "./scratch.mjs";
 
 let session;
@@ -28,6 +29,8 @@ try {
 if (!session) process.exit(0);
 
 purgeHold();
+// A final export that no command came after is told to the server here (exports.mjs).
+await reportExports();
 
 const downloads = await readDownloads();
 const mine = downloads.filter((entry) => entry.session === session && !entry.review);

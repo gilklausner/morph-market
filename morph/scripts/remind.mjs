@@ -10,6 +10,7 @@
 import { readFileSync } from "node:fs";
 
 import { readDownloads } from "./downloads.mjs";
+import { reportExports } from "./exports.mjs";
 
 let session;
 try {
@@ -20,6 +21,8 @@ try {
 if (!session || !(await readDownloads()).some((entry) => entry.session === session)) process.exit(0);
 
 if (process.argv[2] === "tool") {
+  // A command just finished: when it left a final export, the server is told (exports.mjs).
+  await reportExports();
   console.log(
     JSON.stringify({
       hookSpecificOutput: {
