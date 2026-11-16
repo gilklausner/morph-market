@@ -18,7 +18,7 @@ import { readdir, stat } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 
 import { held, readDownloads, removeParts, removeResearch, settle } from "./downloads.mjs";
-import { morphHome, purgeHold } from "./home.mjs";
+import { clearBundleCache, morphHome, purgeHold } from "./home.mjs";
 import { reportExports } from "./exports.mjs";
 import { hebrewAnswer } from "./hebrew.mjs";
 import { emptyScratch, noteSession } from "./scratch.mjs";
@@ -112,6 +112,8 @@ for (const entry of leaving) {
   else await removeParts(entry);
 }
 if (seen.length || leaving.length) await settle({ remove: leaving, seen });
+// No video of any session is in work any more: the worked copy of the code that Remotion keeps goes too (home.mjs).
+if (leaving.length && !staying.some((entry) => !entry.research && !entry.review)) clearBundleCache();
 // The video is finished and nothing of this session is in work: its passing work files go too.
 if (leaving.length && !mine.some((entry) => !leaving.includes(entry))) emptyScratch(session);
 }

@@ -74,3 +74,17 @@ export function purgeHold(olderThan = HOLD_MS) {
     }
   }
 }
+
+/**
+ * Empties the cache Remotion keeps beside its packages. Before a render Remotion packs the
+ * video's code, and keeps a worked copy of it there so the next packing is quicker: a copy
+ * that holds the style's code too, and that nothing else removes. It goes when a video is
+ * finished and no other video is in work; the next render packs from the start.
+ */
+export function clearBundleCache() {
+  try {
+    rmSync(join(morphHome(), "כלים", "רימושן", "node_modules", ".cache"), { recursive: true, force: true });
+  } catch {
+    // In use by a render that is running: it goes at the end of the next video.
+  }
+}
