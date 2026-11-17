@@ -11,6 +11,9 @@
 // When the last of a session's downloads leave, the session's own temporary folder is
 // emptied too (see scratch.mjs).
 //
+// At the end of every turn, in every session on the computer, MORPH's own programs stop
+// coming first for Claude's commands when no edit is in progress any more (switch.mjs).
+//
 // The same run also checks that the turn's last message is in the user's language (hebrew.mjs).
 
 import { readFileSync } from "node:fs";
@@ -22,6 +25,7 @@ import { clearBundleCache, morphHome, purgeHold } from "./home.mjs";
 import { reportExports } from "./exports.mjs";
 import { hebrewAnswer } from "./hebrew.mjs";
 import { emptyScratch, noteSession } from "./scratch.mjs";
+import { switchOffWhenIdle } from "./switch.mjs";
 
 let input;
 try {
@@ -45,6 +49,7 @@ const finish = () => {
 };
 const mine = downloads.filter((entry) => entry.session === session && !entry.review);
 if (mine.length) await work();
+await switchOffWhenIdle();
 finish();
 
 async function work() {

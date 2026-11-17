@@ -4,7 +4,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, rmSync, statSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { isAbsolute, join } from "node:path";
 
 /** The MORPH folder. MORPH_HOME is for testing only. */
 export function morphHome() {
@@ -22,22 +22,46 @@ export function hide() {
   if (!existsSync(home)) return;
   const paths = [home, ...readdirSync(home).map((name) => join(home, name))];
   if (process.platform === "darwin") spawnSync("chflags", ["hidden", ...paths]);
-  else if (process.platform === "win32") for (const path of paths) spawnSync("attrib", ["+h", path], { windowsHide: true });
+  else if (process.platform === "win32") {
+    // Windows' own attrib, named in full: Windows looks for a program named without its folder
+    // in the current folder first, so an "attrib.exe" put in the folder the session was opened
+    // in would run instead.
+    const attrib = join(process.env.SystemRoot || "C:\\Windows", "System32", "attrib.exe");
+    for (const path of paths) spawnSync(attrib, ["+h", path], { windowsHide: true });
+  }
 }
 
+/** Folders where another program called bash sits: WSL's in System32, and the shortcuts in WindowsApps. */
+const NOT_GIT_BASH = /(^|[\\/])(system32|syswow64|sysnative|windowsapps)([\\/]|$)/i;
+
 /**
- * Git Bash on Windows: the one Claude Code was told about, the usual places, or MORPH's own
- * copy. Never a bare "bash": on Windows that can be another program of the same name.
+ * Git Bash on Windows: the one Claude Code was told about, the usual places, MORPH's own
+ * copy, then the Git that the computer's PATH leads to. Never a bare "bash", and never a
+ * program from the current folder: Windows looks there first for a bare name, so a
+ * "bash.exe" put in the folder the session was opened in would run, and a bare "bash" can
+ * also be WSL's, another program of the same name. When there is no Git Bash at all, the
+ * answer is MORPH's own copy all the same: what needs it then fails cleanly, and nothing
+ * else runs in its place.
  */
 export function gitBash() {
   const local = process.env.LOCALAPPDATA || join(homedir(), "AppData", "Local");
+  const own = join(local, "MORPH-git", "bin", "bash.exe");
   const places = [
     process.env.CLAUDE_CODE_GIT_BASH_PATH,
     join(process.env.ProgramFiles || "C:\\Program Files", "Git", "bin", "bash.exe"),
     join(local, "Programs", "Git", "bin", "bash.exe"),
-    join(local, "MORPH-git", "bin", "bash.exe"),
+    own,
   ];
-  return places.find((place) => place && existsSync(place)) ?? "bash";
+  // The folders on PATH, only those written in full: "." or an empty entry is the current folder.
+  const folders = (process.env.PATH ?? "")
+    .split(";")
+    .map((folder) => folder.replace(/^"(.*)"$/, "$1"))
+    .filter((folder) => isAbsolute(folder) && !NOT_GIT_BASH.test(folder));
+  // Git for Windows puts its "cmd" folder on PATH, with git.exe in it. Its bash is in "bin", beside it.
+  for (const folder of folders) if (existsSync(join(folder, "git.exe"))) places.push(join(folder, "..", "bin", "bash.exe"));
+  // Then any other folder on PATH that holds a bash.exe.
+  for (const folder of folders) places.push(join(folder, "bash.exe"));
+  return places.find((place) => place && isAbsolute(place) && existsSync(place)) ?? own;
 }
 
 /**

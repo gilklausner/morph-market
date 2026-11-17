@@ -4,7 +4,8 @@
 //
 // It also starts the download of the style's research when it has one (fetch-research.mjs),
 // lends the review page's settings to the session's folder, checks the MORPH songs and
-// sound effects (fetch-sound.mjs) and checks the tools' version (update-tools.mjs).
+// sound effects (fetch-sound.mjs), checks the tools' version (update-tools.mjs), and puts
+// MORPH's own programs first for Claude's commands (switch.mjs).
 //
 // It reads the hook's input from stdin and answers with one line of JSON: a note that
 // Claude sees next to the style it just got.
@@ -20,6 +21,7 @@ import { knownVideos } from "./exports.mjs";
 import { hide, morphHome } from "./home.mjs";
 import { CODE, placeOf, plainName, plainNames, RESEARCH, TOOLS } from "./places.mjs";
 import { lendReviewSettings } from "./review-settings.mjs";
+import { switchOn } from "./switch.mjs";
 import { startUpdate } from "./update-tools.mjs";
 
 /** Tells Claude what happened, and ends. */
@@ -173,6 +175,11 @@ const updating = await startUpdate(tools);
 
 // The plugin removes them again when this session closes (clear-style-code.mjs).
 await noteDownload(target, code.parts, input.session_id ?? "unknown", code.name);
+
+// The edit is on the list now: MORPH's own programs come first for Claude's commands until no
+// edit is in progress on the computer (switch.mjs). Only after it is on the list, so a clean-up
+// that runs meanwhile in another session sees the edit and leaves them on.
+switchOn();
 
 say(
   `הרכיבים של הסגנון "${code.name}" ירדו מהשרת אל "${code.folder}": ` +

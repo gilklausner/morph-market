@@ -13,8 +13,10 @@ case "$id" in
   *[!0-9a-f]* | "") id="" ;;
 esac
 if [ ${#id} -ne 32 ]; then
-  mkdir -p "$HOME/.morph"
   id=$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n')
-  printf '%s\n' "$id" > "$file"
+  # Only the user may read it: the folder is made 0700 and the file 0600. A file that was
+  # there already, with something else in it, keeps its old mode when written, so it is set.
+  (umask 077 && mkdir -p "$HOME/.morph" && printf '%s\n' "$id" > "$file")
+  chmod 600 "$file" 2>/dev/null
 fi
 printf '{"X-Morph-Device":"%s"}\n' "$id"

@@ -1,5 +1,5 @@
 {
-  "description": "Brings a style's components and research from the MORPH server when Claude gets the style, and removes them, and the session's passing work files, when the video is finished or the session closes; lends the session the settings of the styles page and the review page; keeps a style's research out of the conversation; keeps the MORPH tools and sound up to date in the background; and points each session at the programs the MORPH tools bring; and sends Claude back to say a turn's last message in Hebrew when it came out in English.",
+  "description": "Brings a style's components and research from the MORPH server when Claude gets the style, and removes them, and the session's passing work files, when the video is finished or the session closes; lends the session the settings of the styles page and the review page; keeps a style's research out of the conversation; keeps the MORPH tools and sound up to date in the background; puts the programs the MORPH tools bring first for each session's commands only while an edit is in progress on the computer; and sends Claude back to say a turn's last message in Hebrew when it came out in English.",
   "hooks": {
     "PostToolUse": [
       {

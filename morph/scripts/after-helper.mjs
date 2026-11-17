@@ -3,11 +3,13 @@
 // the computer: it leaves at once, whether or not the session stays open. A helper that
 // goes on later and needs it calls get_style, and the plugin brings it again.
 //
-// The user's own list in the research folder stays.
+// The user's own list in the research folder stays. When the research was the last edit on
+// the computer, MORPH's own programs stop coming first for Claude's commands (switch.mjs).
 
 import { readFileSync } from "node:fs";
 
 import { held, readDownloads, removeResearch, settle } from "./downloads.mjs";
+import { switchOffWhenIdle } from "./switch.mjs";
 
 let session;
 try {
@@ -26,3 +28,4 @@ for (const entry of leaving) {
   if (!held(staying, entry)) await removeResearch(entry);
 }
 await settle({ remove: leaving });
+await switchOffWhenIdle();

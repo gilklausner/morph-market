@@ -21,6 +21,26 @@ export async function readDownloads() {
   }
 }
 
+/**
+ * The list as it is on disk: empty when there is none, and null when it is there but cannot
+ * be read just now, say while another hook is in the middle of writing it.
+ */
+export async function readDownloadsNow() {
+  if (!file) return [];
+  let text;
+  try {
+    text = await readFile(file, "utf8");
+  } catch (error) {
+    return error?.code === "ENOENT" ? [] : null;
+  }
+  try {
+    const downloads = JSON.parse(text);
+    return Array.isArray(downloads) ? downloads : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function writeDownloads(downloads) {
   if (!file) return;
   await mkdir(folder, { recursive: true });

@@ -10,6 +10,10 @@
 // again, so an edit that continues later loses nothing.
 //
 // The temporary folder of a session that edited with MORPH is emptied with them (scratch.mjs).
+//
+// When no edit is in progress on the computer after that, MORPH's own programs stop coming
+// first for Claude's commands (switch.mjs). At a start this also puts right a switch that a
+// session which crashed in the middle of an edit left on.
 
 import { readFileSync } from "node:fs";
 
@@ -17,6 +21,7 @@ import { readDownloads, removeParts, removeResearch, settle } from "./downloads.
 import { purgeHold } from "./home.mjs";
 import { returnReviewSettings } from "./review-settings.mjs";
 import { emptyScratch, forgetSessions, readSessions } from "./scratch.mjs";
+import { switchOffWhenIdle } from "./switch.mjs";
 
 /** A download nobody touched for this long is a leftover. */
 const STALE_MS = 12 * 60 * 60 * 1000;
@@ -40,11 +45,12 @@ const staying = downloads.filter((entry) => !leaving.includes(entry));
 for (const entry of leaving) {
   // Another session that still works in the same folder keeps what it downloaded.
   if (staying.some((other) => other.path === entry.path && kind(other) === kind(entry) && (other.style ?? "") === (entry.style ?? "") && !stale(other))) continue;
-  if (entry.review) await returnReviewSettings(entry.path);
+  if (entry.review) await returnReviewSettings(entry);
   else if (entry.research) await removeResearch(entry);
   else await removeParts(entry);
 }
 if (leaving.length) await settle({ remove: leaving });
+await switchOffWhenIdle();
 
 // The temporary folders of sessions that edited with MORPH: this one when it closes, and
 // at a start, those of sessions that were not seen editing for a long while.
