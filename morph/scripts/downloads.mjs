@@ -6,6 +6,9 @@
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
+import { morphHome } from "./home.mjs";
+import { CODE, placeOf, plainName, plainNames, RESEARCH, TOOLS } from "./places.mjs";
+
 const folder = process.env.CLAUDE_PLUGIN_DATA;
 const file = folder && join(folder, "downloads.json");
 
@@ -35,9 +38,16 @@ export async function noteDownload(path, parts, session, style) {
   await writeDownloads(downloads);
 }
 
-/** Removes the downloaded parts of a folder from the computer. */
+/**
+ * Removes the downloaded parts of a folder from the computer. Only from a style's components
+ * folder or the styles' tools folder, and only parts that sit right inside it: an entry of the
+ * list that points anywhere else removes nothing (places.mjs).
+ */
 export async function removeParts(entry) {
-  for (const part of entry.parts) await rm(join(entry.path, part), { recursive: true, force: true });
+  const home = morphHome();
+  const folder = placeOf(home, entry.path, CODE) ?? placeOf(home, entry.path, TOOLS);
+  if (!folder || !plainNames(entry.parts)) return;
+  for (const part of entry.parts) await rm(join(folder, part), { recursive: true, force: true });
 }
 
 /** Notes that a session now uses a style's research folder. `keep` names what stays in it. */
@@ -49,14 +59,17 @@ export async function noteResearch(path, keep, session, style) {
 
 /** Removes a style's research from the computer, apart from what belongs to the user. */
 export async function removeResearch(entry) {
+  // Only a style's research folder is emptied: any other folder of the list is left as it is.
+  const folder = placeOf(morphHome(), entry.path, RESEARCH);
+  if (!folder) return;
   let names = [];
   try {
-    names = await readdir(entry.path);
+    names = await readdir(folder);
   } catch {
     return; // The folder is not there.
   }
   for (const name of names) {
-    if (!(entry.keep ?? []).includes(name)) await rm(join(entry.path, name), { recursive: true, force: true });
+    if (plainName(name) && !(entry.keep ?? []).includes(name)) await rm(join(folder, name), { recursive: true, force: true });
   }
 }
 

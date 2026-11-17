@@ -18,6 +18,7 @@ import { deviceId } from "./device.mjs";
 import { noteDownload, noteResearch } from "./downloads.mjs";
 import { knownVideos } from "./exports.mjs";
 import { hide, morphHome } from "./home.mjs";
+import { CODE, placeOf, plainName, plainNames, RESEARCH, TOOLS } from "./places.mjs";
 import { lendReviewSettings } from "./review-settings.mjs";
 import { startUpdate } from "./update-tools.mjs";
 
@@ -81,7 +82,12 @@ if (answer.status === 403) {
 if (!answer.ok) say(`הרכיבים של הסגנון לא ירדו: השרת של MORPH ענה ${answer.status}. ${STOP}`);
 
 const code = await answer.json();
-const target = resolve(tools, code.folder);
+// The components go only to a style's own folder in the Remotion project, and each part is one
+// name inside it: the parts are removed whole, so a place of any other shape is refused (places.mjs).
+const target = placeOf(tools, code.folder, CODE);
+if (!target || !plainNames(code.parts) || !Array.isArray(code.files)) {
+  say(`הרכיבים של הסגנון לא ירדו: השרת של MORPH מסר להם מקום לא תקין. ${STOP}`);
+}
 if (!existsSync(dirname(target))) {
   say(
     `הרכיבים של הסגנון לא ירדו: הכלים של MORPH לא מותקנים במחשב הזה. קוראים ל־get_tools ומתקינים לפי מה שחזר. ${STOP}`,
@@ -106,12 +112,12 @@ spawn(process.execPath, [join(import.meta.dirname, "fetch-sound.mjs"), tools], {
 
 // Tools that belong to this style alone: they sit with the other tools while the style is
 // in use, and leave with its components. They run the programs the MORPH folder brings.
-const ownTools = code.tools && resolve(tools, code.tools.folder);
+const ownTools = code.tools && placeOf(tools, code.tools.folder, TOOLS);
 const toolNames = [];
-if (ownTools && ownTools.startsWith(resolve(tools) + sep) && existsSync(ownTools)) {
+if (ownTools && existsSync(ownTools)) {
   for (const file of code.tools.files ?? []) {
     const path = resolve(ownTools, file.path);
-    if (dirname(path) !== ownTools) continue; // Only files, right inside the tools' folder.
+    if (!plainName(file.path) || dirname(path) !== ownTools) continue; // Only files, right inside the tools' folder.
     await writeFile(path, file.text.replaceAll("/opt/homebrew/bin/", `${join(tools, "כלים", "bin").replaceAll("\\", "/")}/`));
     toolNames.push(file.path);
   }
@@ -122,8 +128,10 @@ if (ownTools && ownTools.startsWith(resolve(tools) + sep) && existsSync(ownTools
 // the style, in the background, and leaves when the helper stops (after-helper.mjs). The
 // "loading" note is written here, before the download starts, so the helper never finds
 // the folder without a note.
-const research = code.research && resolve(tools, code.research.folder);
-const hasResearch = Boolean(research && research.startsWith(resolve(tools) + sep) && /^[0-9a-f]{12}$/.test(code.research.version ?? ""));
+// The research goes only to a style's research folder: when it leaves, everything in that folder leaves with it.
+const research = code.research && placeOf(tools, code.research.folder, RESEARCH);
+const recentOk = !code.research?.recent || plainName(code.research.recent);
+const hasResearch = Boolean(research && recentOk && /^[0-9a-f]{12}$/.test(code.research.version ?? ""));
 const researching = hasResearch && Boolean(input.agent_id);
 if (researching) {
   await noteResearch(research, [code.research.recent].filter(Boolean), input.session_id ?? "unknown", code.name);

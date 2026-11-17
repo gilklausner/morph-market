@@ -25,6 +25,7 @@ import { join, resolve, sep } from "node:path";
 import { deviceId } from "./device.mjs";
 import { readDownloads, removeResearch } from "./downloads.mjs";
 import { unpack } from "./home.mjs";
+import { placeOf, plainName, RESEARCH } from "./places.mjs";
 import { download, serverAddress } from "./server.mjs";
 
 const MARKER = ".morph-research.json";
@@ -36,8 +37,8 @@ const parts = /^\d{1,2}$/.test(partCount ?? "") ? Math.max(1, Number(partCount))
 const key = process.env.CLAUDE_PLUGIN_OPTION_MORPH_KEY;
 if (!key || !tools || !style || !folder || !/^[0-9a-f]{12}$/.test(version ?? "")) process.exit(0);
 
-const target = resolve(tools, folder);
-if (!target.startsWith(resolve(tools) + sep)) process.exit(0); // Never outside the MORPH folder.
+const target = placeOf(tools, folder, RESEARCH);
+if (!target || (recent && !plainName(recent))) process.exit(0); // Only a style's research folder (places.mjs).
 const marker = join(target, MARKER);
 const read = async () => {
   try {
