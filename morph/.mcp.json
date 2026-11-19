@@ -2,7 +2,7 @@
   "mcpServers": {
     "morph": {
       "type": "http",
-      "url": "https://morph-server.gil-klausner7.workers.dev/mcp",
+      "url": "https://api.morpheditor.com/mcp",
       "headers": {
         "Authorization": "Bearer ${user_config.morph_key}"
       },

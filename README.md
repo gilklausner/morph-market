@@ -6,4 +6,4 @@
 
 ההתקנה נעשית בהדבקה אחת בקלוד. כל השלבים בדף ההתקנה:
 
-https://morph-ai.pages.dev/install
+https://morpheditor.com/install

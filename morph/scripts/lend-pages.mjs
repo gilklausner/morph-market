@@ -10,6 +10,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { noteEditing } from "./editing.mjs";
 import { morphHome } from "./home.mjs";
 import { lendReviewSettings } from "./review-settings.mjs";
 import { switchOn } from "./switch.mjs";
@@ -21,6 +22,8 @@ try {
   // No input: nothing to do.
 }
 
+// The session started an edit: it may look through the MORPH folder by name from now on (editing.mjs).
+await noteEditing(input.session_id);
 switchOn();
 
 const tools = morphHome();

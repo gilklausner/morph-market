@@ -11,6 +11,10 @@
 //
 // The temporary folder of a session that edited with MORPH is emptied with them (scratch.mjs).
 //
+// So is the worked copy of the code that Remotion keeps, which holds the style's code too, when
+// no other session has a style's components: a video left in the middle has nobody to clean
+// it up after it (home.mjs).
+//
 // When no edit is in progress on the computer after that, MORPH's own programs stop coming
 // first for Claude's commands (switch.mjs). At a start this also puts right a switch that a
 // session which crashed in the middle of an edit left on.
@@ -18,7 +22,8 @@
 import { readFileSync } from "node:fs";
 
 import { readDownloads, removeParts, removeResearch, settle } from "./downloads.mjs";
-import { purgeHold } from "./home.mjs";
+import { forgetEditing } from "./editing.mjs";
+import { clearBundleCache, purgeHold } from "./home.mjs";
 import { returnReviewSettings } from "./review-settings.mjs";
 import { emptyScratch, forgetSessions, readSessions } from "./scratch.mjs";
 import { switchOffWhenIdle } from "./switch.mjs";
@@ -50,6 +55,9 @@ for (const entry of leaving) {
   else await removeParts(entry);
 }
 if (leaving.length) await settle({ remove: leaving });
+// A style's components left, and no other session has any: the worked copy of the code that Remotion keeps goes too.
+const components = (entry) => !entry.research && !entry.review;
+if (leaving.some(components) && !staying.some(components)) clearBundleCache();
 await switchOffWhenIdle();
 
 // The temporary folders of sessions that edited with MORPH: this one when it closes, and
@@ -60,3 +68,6 @@ const done = Object.keys(sessions).filter((known) =>
 );
 for (const known of done) emptyScratch(known);
 if (done.length) await forgetSessions(done);
+
+// The sessions that started an edit: this one when it closes, and at a start those not seen for days (editing.mjs).
+await forgetEditing(mode === "end" && session ? [session] : []);

@@ -3,7 +3,9 @@
 // the start of every edit, and does something only when there is something to do:
 //
 //   the sound is not here yet, or the server has a newer one   it comes down
-//   the key is no longer active                                the sound is removed
+//   the key is no longer active                                the sound is removed, and a day
+//                                                              later what was built from a style
+//                                                              (key-refused.mjs)
 //
 // Songs the user added are never touched.
 //
@@ -19,6 +21,7 @@ import { dirname, join, resolve, sep } from "node:path";
 
 import { deviceId } from "./device.mjs";
 import { hide, morphHome, unpack } from "./home.mjs";
+import { accepted, refused } from "./key-refused.mjs";
 import { download, serverAddress } from "./server.mjs";
 
 const MARKER = "סאונד/.morph-sound.json";
@@ -57,8 +60,13 @@ if (answer.status === 401 || answer.status === 403) {
   // The key is no longer active: the sound MORPH brought leaves the computer.
   await remove(now?.files);
   await rm(marker, { force: true });
+  // A key the server does not take at all (403 is only "too many computers", for this one): a
+  // day after the first refusal, what was built from a style leaves too.
+  if (answer.status === 401) await refused();
   process.exit(0);
 }
+// The server took the key. A 503 only says the sound is not in the storage just now.
+if (answer.ok || answer.status === 503) await accepted();
 const version = answer.ok ? (await answer.text()).trim() : "";
 if (!/^[0-9a-f]{12}$/.test(version)) process.exit(0);
 if (now?.state === "ready" && now.version === version && inside(now.files)?.every((file) => existsSync(join(tools, file)))) process.exit(0);

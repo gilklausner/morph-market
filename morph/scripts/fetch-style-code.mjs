@@ -17,6 +17,7 @@ import { dirname, join, resolve, sep } from "node:path";
 
 import { deviceId } from "./device.mjs";
 import { noteDownload, noteResearch } from "./downloads.mjs";
+import { noteEditing } from "./editing.mjs";
 import { knownVideos } from "./exports.mjs";
 import { hide, morphHome } from "./home.mjs";
 import { CODE, placeOf, plainName, plainNames, RESEARCH, TOOLS } from "./places.mjs";
@@ -51,6 +52,9 @@ if (!style) process.exit(0);
 // The key the user typed when they set up the plugin.
 const key = process.env.CLAUDE_PLUGIN_OPTION_MORPH_KEY;
 if (!key) process.exit(0); // Without a key the server already refused the style itself.
+
+// The session started an edit, also when it skipped asking which styles there are (editing.mjs).
+await noteEditing(input.session_id);
 
 // The tools live in the MORPH folder, whatever folder the session was opened in.
 const tools = morphHome();
