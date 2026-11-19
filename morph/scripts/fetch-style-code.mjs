@@ -16,7 +16,7 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve, sep } from "node:path";
 
 import { deviceId } from "./device.mjs";
-import { noteDownload, noteResearch } from "./downloads.mjs";
+import { held, noteDownload, noteResearch, readDownloads, removeParts, removeResearch, settle } from "./downloads.mjs";
 import { noteEditing } from "./editing.mjs";
 import { knownVideos } from "./exports.mjs";
 import { hide, morphHome } from "./home.mjs";
@@ -98,6 +98,21 @@ if (!existsSync(dirname(target))) {
   say(
     `הרכיבים של הסגנון לא ירדו: הכלים של MORPH לא מותקנים במחשב הזה. קוראים ל־get_tools ומתקינים לפי מה שחזר. ${STOP}`,
   );
+}
+
+// The session moved on to another style: what came down for the one before (its components,
+// its own tools and its research) leaves now, and not only when the session closes. What
+// another session still uses stays. Going back to that style later brings it again.
+if (input.session_id) {
+  const downloads = await readDownloads();
+  const before = downloads.filter((entry) => entry.session === input.session_id && !entry.review && entry.style && entry.style !== code.name);
+  const staying = downloads.filter((entry) => !before.includes(entry));
+  for (const entry of before) {
+    if (held(staying, entry)) continue;
+    if (entry.research) await removeResearch(entry);
+    else await removeParts(entry);
+  }
+  if (before.length) await settle({ remove: before });
 }
 
 // Each part is replaced whole, so a file the style no longer has does not stay behind.
