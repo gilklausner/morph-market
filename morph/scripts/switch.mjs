@@ -5,9 +5,17 @@ import { join } from "node:path";
 import { readDownloadsNow } from "./downloads.mjs";
 import { morphHome } from "./home.mjs";
 
-function places() {
+const SESSION = /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
+const OWN = /^\.active-([0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12})$/i;
+
+function places(session) {
   const tools = join(morphHome(), "כלים");
-  return { bin: join(tools, "bin"), active: join(tools, ".active") };
+  return {
+    tools,
+    bin: join(tools, "bin"),
+    active: join(tools, ".active"),
+    own: SESSION.test(String(session ?? "")) ? join(tools, `.active-${session}`) : null,
+  };
 }
 
 const namesIn = (folder) => {
@@ -66,16 +74,23 @@ function lend(bin, active, name) {
   }
 }
 
-export function switchOn() {
-  try {
-    const { bin, active } = places();
-    let names = namesIn(bin);
-    if (!names.length) return;
-    if (process.platform === "win32") names = names.filter((name) => !names.includes(`${name}.exe`));
-    if (!ownFolder(active)) mkdirSync(active, { recursive: true });
-    for (const name of names) lend(bin, active, name);
-    for (const name of namesIn(active)) if (!names.includes(name)) remove(join(active, name));
-  } catch {
+function fill(bin, active) {
+  let names = namesIn(bin);
+  if (!names.length) return;
+  if (process.platform === "win32") names = names.filter((name) => !names.includes(`${name}.exe`));
+  if (!ownFolder(active)) mkdirSync(active, { recursive: true });
+  for (const name of names) lend(bin, active, name);
+  for (const name of namesIn(active)) if (!names.includes(name)) remove(join(active, name));
+}
+
+export function switchOn(session) {
+  const { bin, active, own } = places(session);
+  for (const folder of [own, active]) {
+    if (!folder) continue;
+    try {
+      fill(bin, folder);
+    } catch {
+    }
   }
 }
 
@@ -88,12 +103,30 @@ export function switchOff() {
   }
 }
 
+function switchOffBut(sessions) {
+  try {
+    const { tools } = places();
+    const keep = new Set(sessions.map((session) => String(session).toLowerCase()));
+    for (const name of namesIn(tools)) {
+      const found = name.match(OWN);
+      if (found && !keep.has(found[1].toLowerCase())) remove(join(tools, name));
+    }
+  } catch {
+  }
+}
+
 export const editInProgress = (downloads) => downloads.some((entry) => entry && typeof entry === "object" && !entry.review);
+
+export const editingSessions = (downloads) => [
+  ...new Set(downloads.filter((entry) => entry && typeof entry === "object" && !entry.review && typeof entry.session === "string").map((entry) => entry.session)),
+];
 
 export async function switchOffWhenIdle() {
   try {
     const downloads = await readDownloadsNow();
-    if (downloads && !editInProgress(downloads)) switchOff();
+    if (!downloads) return;
+    switchOffBut(editingSessions(downloads));
+    if (!editInProgress(downloads)) switchOff();
   } catch {
   }
 }

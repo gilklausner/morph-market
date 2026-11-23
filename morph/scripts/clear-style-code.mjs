@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 
 import { readDownloads, removeParts, removeResearch, settle } from "./downloads.mjs";
 import { forgetEditing } from "./editing.mjs";
+import { reportExports } from "./exports.mjs";
 import { clearBundleCache, purgeHold } from "./home.mjs";
 import { returnReviewSettings } from "./review-settings.mjs";
 import { emptyScratch, forgetSessions, readSessions } from "./scratch.mjs";
@@ -18,6 +19,7 @@ try {
 }
 
 purgeHold();
+if (mode === "start") await reportExports();
 
 const downloads = await readDownloads();
 const kind = (entry) => (entry.review ? "review" : entry.research ? "research" : "code");

@@ -1,5 +1,5 @@
 {
-  "description": "Brings a style's components and research from the MORPH server when Claude gets the style, and removes them, and the session's passing work files, when the video is finished or the session closes; lends the session the settings of the styles page and the review page; keeps a style's files to the edit they came down for, and its research out of the conversation; takes away what was built from a style a day after the server stopped taking the user's key; keeps the MORPH tools and sound up to date in the background; puts the programs the MORPH tools bring first for each session's commands only while an edit is in progress on the computer; and sends Claude back to say a turn's last message in Hebrew when it came out in English. In every session it tells Claude that MORPH's inner workings are not described, copied or rebuilt, and keeps MORPH's own plugin files from every conversation.",
+  "description": "Does nothing in a conversation until the user asks for MORPH by name. In a MORPH edit: brings a style's components and research from the MORPH server when Claude gets the style, and removes them, and the session's passing work files, when the video is finished or the session closes; lends the session the settings of the styles page and the review page; puts the programs the MORPH tools bring first for that session's commands, only while its edit is in progress; reminds Claude how a customer is talked to; and sends Claude back to say a turn's last message in Hebrew when it came out in English. In every session, silently: keeps a style's files to the edit they came down for, and its research out of the conversation; keeps MORPH's own plugin files from every conversation; takes away what was built from a style a day after the server stopped taking the user's key; and keeps the MORPH tools and sound up to date in the background. From the message that names MORPH on, it tells Claude that MORPH's inner workings are not described, copied or rebuilt.",
   "hooks": {
     "PostToolUse": [
       {
@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh\" \"${CLAUDE_PLUGIN_ROOT}/scripts/remind.mjs\" tool",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh\" --editing \"${CLAUDE_PLUGIN_ROOT}/scripts/remind.mjs\" tool",
             "timeout": 15
           }
         ]
@@ -61,11 +61,6 @@
             "type": "command",
             "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh\" \"${CLAUDE_PLUGIN_ROOT}/scripts/update-tools.mjs\" start",
             "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh\" \"${CLAUDE_PLUGIN_ROOT}/scripts/remind.mjs\" start",
-            "timeout": 15
           }
         ]
       }
@@ -88,7 +83,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh\" \"${CLAUDE_PLUGIN_ROOT}/scripts/after-turn.mjs\"",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh\" --editing \"${CLAUDE_PLUGIN_ROOT}/scripts/after-turn.mjs\"",
             "timeout": 10
           }
         ]
@@ -99,7 +94,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh\" \"${CLAUDE_PLUGIN_ROOT}/scripts/remind.mjs\"",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh\" --named \"${CLAUDE_PLUGIN_ROOT}/scripts/remind.mjs\"",
             "timeout": 15
           }
         ]
@@ -110,7 +105,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh\" \"${CLAUDE_PLUGIN_ROOT}/scripts/after-helper.mjs\"",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-node.sh\" --editing \"${CLAUDE_PLUGIN_ROOT}/scripts/after-helper.mjs\"",
             "timeout": 10
           }
         ]

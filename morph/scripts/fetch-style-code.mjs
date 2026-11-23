@@ -156,7 +156,7 @@ const updating = await startUpdate(tools);
 
 await noteDownload(target, code.parts, input.session_id ?? "unknown", code.name);
 
-switchOn();
+switchOn(input.session_id);
 
 say(
   `הרכיבים של הסגנון "${code.name}" ירדו מהשרת אל "${code.folder}": ` +

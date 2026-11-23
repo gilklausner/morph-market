@@ -14,7 +14,7 @@ try {
 }
 
 await noteEditing(input.session_id);
-switchOn();
+switchOn(input.session_id);
 
 const tools = morphHome();
 if (!existsSync(join(tools, "כלים", "בחירת-סגנון", "שרת.py"))) process.exit(0);
