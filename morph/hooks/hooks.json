@@ -72,7 +72,7 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Read|NotebookRead|LS|Grep|Glob|Bash|mcp__ccd_.*|mcp__terminal__.*|mcp__.*(navigate|upload|file|attach).*",
+        "matcher": "Read|NotebookRead|LS|LSP|Grep|Glob|Bash|Monitor|mcp__ccd_.*|mcp__terminal__.*|mcp__.*(navigate|upload|file|attach).*",
         "hooks": [
           {
             "type": "command",

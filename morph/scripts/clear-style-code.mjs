@@ -1,23 +1,3 @@
-// Removes the style components and the style research the plugin downloaded, so they stay
-// on the computer only while an edit is going on, and takes back the review page's settings it lent to the
-// session's folder. It runs by itself (see hooks/hooks.json):
-//
-//   node clear-style-code.mjs end     when a session closes: what that session downloaded
-//   node clear-style-code.mjs start   when a session opens: leftovers of sessions that
-//                                     closed without a chance to clean up
-//
-// What another session still uses is left alone. The next get_style downloads everything
-// again, so an edit that continues later loses nothing.
-//
-// The temporary folder of a session that edited with MORPH is emptied with them (scratch.mjs).
-//
-// So is the worked copy of the code that Remotion keeps, which holds the style's code too, when
-// no other session has a style's components: a video left in the middle has nobody to clean
-// it up after it (home.mjs).
-//
-// When no edit is in progress on the computer after that, MORPH's own programs stop coming
-// first for Claude's commands (switch.mjs). At a start this also puts right a switch that a
-// session which crashed in the middle of an edit left on.
 
 import { readFileSync } from "node:fs";
 
@@ -28,7 +8,6 @@ import { returnReviewSettings } from "./review-settings.mjs";
 import { emptyScratch, forgetSessions, readSessions } from "./scratch.mjs";
 import { switchOffWhenIdle } from "./switch.mjs";
 
-/** A download nobody touched for this long is a leftover. */
 const STALE_MS = 12 * 60 * 60 * 1000;
 
 const mode = process.argv[2];
@@ -36,7 +15,6 @@ let session;
 try {
   session = JSON.parse(readFileSync(0, "utf8")).session_id;
 } catch {
-  // No input: only leftovers can be cleared.
 }
 
 purgeHold();
@@ -48,20 +26,16 @@ const leaving = downloads.filter((entry) => (mode === "end" ? entry.session === 
 const staying = downloads.filter((entry) => !leaving.includes(entry));
 
 for (const entry of leaving) {
-  // Another session that still works in the same folder keeps what it downloaded.
   if (staying.some((other) => other.path === entry.path && kind(other) === kind(entry) && (other.style ?? "") === (entry.style ?? "") && !stale(other))) continue;
   if (entry.review) await returnReviewSettings(entry);
   else if (entry.research) await removeResearch(entry);
   else await removeParts(entry);
 }
 if (leaving.length) await settle({ remove: leaving });
-// A style's components left, and no other session has any: the worked copy of the code that Remotion keeps goes too.
 const components = (entry) => !entry.research && !entry.review;
 if (leaving.some(components) && !staying.some(components)) clearBundleCache();
 await switchOffWhenIdle();
 
-// The temporary folders of sessions that edited with MORPH: this one when it closes, and
-// at a start, those of sessions that were not seen editing for a long while.
 const sessions = await readSessions();
 const done = Object.keys(sessions).filter((known) =>
   mode === "end" ? known === session : Date.now() - new Date(sessions[known]).getTime() > STALE_MS && !staying.some((entry) => entry.session === known),
@@ -69,5 +43,4 @@ const done = Object.keys(sessions).filter((known) =>
 for (const known of done) emptyScratch(known);
 if (done.length) await forgetSessions(done);
 
-// The sessions that started an edit: this one when it closes, and at a start those not seen for days (editing.mjs).
 await forgetEditing(mode === "end" && session ? [session] : []);

@@ -1,18 +1,3 @@
-// Brings the MORPH songs and sound effects from the server, with the user's key, into the
-// MORPH folder, where they stay. It runs in the background when a session opens and at
-// the start of every edit, and does something only when there is something to do:
-//
-//   the sound is not here yet, or the server has a newer one   it comes down
-//   the key is no longer active                                the sound is removed, and a day
-//                                                              later what was built from a style
-//                                                              (key-refused.mjs)
-//
-// Songs the user added are never touched.
-//
-// The file "סאונד/.morph-sound.json" in the MORPH folder says where things stand:
-//   { "state": "loading" }                           the download is running
-//   { "state": "ready", "version": "", "files": [] } everything is in place; the files MORPH brought
-//   { "state": "failed", "error": "" }
 
 import { existsSync } from "node:fs";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
@@ -25,7 +10,6 @@ import { accepted, refused } from "./key-refused.mjs";
 import { download, serverAddress } from "./server.mjs";
 
 const MARKER = "סאונד/.morph-sound.json";
-/** A download that says it is running for longer than this has died. */
 const LOADING_MS = 10 * 60 * 1000;
 
 const tools = process.argv[2] || morphHome();
@@ -41,7 +25,6 @@ const read = async () => {
   }
 };
 const write = (state) => writeFile(marker, JSON.stringify({ ...state, at: new Date().toISOString() }));
-/** The files of a list, when every one of them is inside the MORPH folder. */
 const inside = (files) =>
   Array.isArray(files) && files.length && files.every((file) => resolve(tools, file).startsWith(resolve(tools) + sep)) ? files : null;
 const remove = async (files) => {
@@ -54,18 +37,14 @@ let answer;
 try {
   answer = await fetch(await serverAddress("/sound/version"), { headers, signal: AbortSignal.timeout(4000) });
 } catch {
-  process.exit(0); // No connection: what is here stays as it is.
+  process.exit(0);
 }
 if (answer.status === 401 || answer.status === 403) {
-  // The key is no longer active: the sound MORPH brought leaves the computer.
   await remove(now?.files);
   await rm(marker, { force: true });
-  // A key the server does not take at all (403 is only "too many computers", for this one): a
-  // day after the first refusal, what was built from a style leaves too.
   if (answer.status === 401) await refused();
   process.exit(0);
 }
-// The server took the key. A 503 only says the sound is not in the storage just now.
 if (answer.ok || answer.status === 503) await accepted();
 const version = answer.ok ? (await answer.text()).trim() : "";
 if (!/^[0-9a-f]{12}$/.test(version)) process.exit(0);
@@ -78,13 +57,10 @@ try {
   await mkdir(dirname(archive), { recursive: true });
   await download(await serverAddress("/sound"), headers, archive);
 
-  // The archive is laid out like the MORPH folder, and its last file is the list of
-  // what it holds, which replaces the "loading" note only when everything is in place.
   const unpacked = { status: unpack(archive, tools) ? 0 : 1 };
   if (unpacked.status !== 0) throw new Error("הקובץ שירד לא נפתח");
   const files = inside((await read())?.files);
   if (!files) throw new Error("הקובץ שירד לא שלם");
-  // A song that left the customers' library leaves this computer too.
   await remove((inside(now?.files) ?? []).filter((file) => !files.includes(file)));
   hide();
 } catch (error) {

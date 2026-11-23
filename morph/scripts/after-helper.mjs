@@ -1,10 +1,3 @@
-// Runs when a helper agent stops (see hooks/hooks.json). A style's research is opened
-// only inside a helper, so when the helper stops, the research has no reason to stay on
-// the computer: it leaves at once, whether or not the session stays open. A helper that
-// goes on later and needs it calls get_style, and the plugin brings it again.
-//
-// The user's own list in the research folder stays. When the research was the last edit on
-// the computer, MORPH's own programs stop coming first for Claude's commands (switch.mjs).
 
 import { readFileSync } from "node:fs";
 
@@ -24,7 +17,6 @@ const leaving = downloads.filter((entry) => entry.research && entry.session === 
 if (!leaving.length) process.exit(0);
 const staying = downloads.filter((entry) => !leaving.includes(entry));
 for (const entry of leaving) {
-  // Another session that is using the same research right now keeps it.
   if (!held(staying, entry)) await removeResearch(entry);
 }
 await settle({ remove: leaving });

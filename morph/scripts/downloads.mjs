@@ -1,7 +1,3 @@
-// The plugin's own list of what it has to take back: which folders (a style's components,
-// a style's research, or a session's folder that was lent the review page's settings), for
-// which session, and when. The list lives in the plugin's data folder, outside the tools folder, so the
-// plugin can remove what it brought without anyone asking it to.
 
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -21,10 +17,6 @@ export async function readDownloads() {
   }
 }
 
-/**
- * The list as it is on disk: empty when there is none, and null when it is there but cannot
- * be read just now, say while another hook is in the middle of writing it.
- */
 export async function readDownloadsNow() {
   if (!file) return [];
   let text;
@@ -47,10 +39,6 @@ export async function writeDownloads(downloads) {
   await writeFile(file, JSON.stringify(downloads, null, 2));
 }
 
-/**
- * Notes that a session now uses the parts of a folder. `style` names the style they belong
- * to. A folder that several styles share, like the tools' scripts, is noted once per style.
- */
 export async function noteDownload(path, parts, session, style) {
   const same = (entry) => !entry.review && !entry.research && entry.path === path && entry.session === session && (entry.style ?? "") === (style ?? "");
   const downloads = (await readDownloads()).filter((entry) => !same(entry));
@@ -58,11 +46,6 @@ export async function noteDownload(path, parts, session, style) {
   await writeDownloads(downloads);
 }
 
-/**
- * Removes the downloaded parts of a folder from the computer. Only from a style's components
- * folder or the styles' tools folder, and only parts that sit right inside it: an entry of the
- * list that points anywhere else removes nothing (places.mjs).
- */
 export async function removeParts(entry) {
   const home = morphHome();
   const folder = placeOf(home, entry.path, CODE) ?? placeOf(home, entry.path, TOOLS);
@@ -70,33 +53,28 @@ export async function removeParts(entry) {
   for (const part of entry.parts) await rm(join(folder, part), { recursive: true, force: true });
 }
 
-/** Notes that a session now uses a style's research folder. `keep` names what stays in it. */
 export async function noteResearch(path, keep, session, style) {
   const downloads = (await readDownloads()).filter((entry) => !(entry.research && entry.path === path && entry.session === session));
   downloads.push({ path, parts: [], research: true, keep, session, ...(style && { style }), at: new Date().toISOString() });
   await writeDownloads(downloads);
 }
 
-/** Removes a style's research from the computer, apart from what belongs to the user. */
 export async function removeResearch(entry) {
-  // Only a style's research folder is emptied: any other folder of the list is left as it is.
   const folder = placeOf(morphHome(), entry.path, RESEARCH);
   if (!folder) return;
   let names = [];
   try {
     names = await readdir(folder);
   } catch {
-    return; // The folder is not there.
+    return;
   }
   for (const name of names) {
     if (plainName(name) && !(entry.keep ?? []).includes(name)) await rm(join(folder, name), { recursive: true, force: true });
   }
 }
 
-/** A session that noted a download longer ago than this no longer holds it for the others. */
 const HOLD_MS = 3 * 60 * 60 * 1000;
 
-/** True when one of the other entries still holds the same download as `entry`. */
 export function held(others, entry) {
   return others.some(
     (other) =>
@@ -110,11 +88,6 @@ export function held(others, entry) {
 
 const keyOf = (entry) => [entry.path, entry.session, entry.review ? "review" : entry.research ? "research" : "code", entry.style ?? ""].join("|");
 
-/**
- * Takes entries off the list, and marks others as seen, on the list as it is on disk right
- * now. A hook that read the list a moment ago, and writes its own copy back, would drop
- * what another hook added in between. So a change is always applied to a fresh read.
- */
 export async function settle({ remove = [], seen = [] } = {}) {
   const gone = new Set(remove.map(keyOf));
   const marked = new Set(seen.map(keyOf));
